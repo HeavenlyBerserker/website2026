@@ -3,12 +3,28 @@
   var text = document.querySelector('.background-text');
   if (!img || !text) return;
 
-  function applySize(textH) {
-    var maxW = window.innerWidth * 0.9;
+  var mobileQuery = window.matchMedia('(max-width: 768px)');
+
+  function clearInlineSize() {
+    img.style.width = '';
+    img.style.height = '';
+  }
+
+  function sizeForDesktop() {
+    if (!img.naturalWidth) return;
+
+    // Collapse image to measure full-width text height
+    img.style.width = '0';
+    img.style.height = '0';
+    img.style.visibility = 'hidden';
+
+    var textH = text.offsetHeight;
+    var maxW = Math.min(window.innerWidth * 0.9, text.parentElement.clientWidth * 0.45);
     var aspect = img.naturalWidth / img.naturalHeight;
     var widthFromHeight = textH * aspect;
 
-    // Whichever is smaller: height-matched to background text, or 90vw wide
+    img.style.visibility = '';
+
     if (widthFromHeight <= maxW) {
       img.style.height = Math.round(textH) + 'px';
       img.style.width = 'auto';
@@ -16,29 +32,57 @@
       img.style.width = Math.round(maxW) + 'px';
       img.style.height = 'auto';
     }
-  }
 
-  function sizePortrait() {
-    if (!img.naturalWidth) return;
-
-    // Measure background text at full width first
-    img.style.width = '0';
-    img.style.height = '0';
-    var textH = text.offsetHeight;
-    applySize(textH);
-
-    // Refine once text reflows beside/above the sized image
+    // One refine after text reflows beside the image
     requestAnimationFrame(function () {
-      applySize(text.offsetHeight);
+      if (mobileQuery.matches) return;
+      var refinedH = text.offsetHeight;
+      var refinedW = refinedH * aspect;
+      if (refinedW <= maxW) {
+        img.style.height = Math.round(refinedH) + 'px';
+        img.style.width = 'auto';
+      }
     });
   }
 
-  if (img.complete) sizePortrait();
-  else img.addEventListener('load', sizePortrait);
+  function sizePortrait() {
+    if (mobileQuery.matches) {
+      // Mobile: CSS handles 90% width + centering
+      clearInlineSize();
+      return;
+    }
+    sizeForDesktop();
+  }
+
+  function start() {
+    var run = function () {
+      sizePortrait();
+    };
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(run);
+    } else {
+      run();
+    }
+
+    // Re-run after image decode (Chrome can report size early)
+    if (img.decode) {
+      img.decode().then(run).catch(function () {});
+    }
+  }
+
+  if (img.complete && img.naturalWidth) start();
+  else img.addEventListener('load', start);
 
   var timer;
   window.addEventListener('resize', function () {
     clearTimeout(timer);
     timer = setTimeout(sizePortrait, 100);
   });
+
+  if (mobileQuery.addEventListener) {
+    mobileQuery.addEventListener('change', sizePortrait);
+  } else if (mobileQuery.addListener) {
+    mobileQuery.addListener(sizePortrait);
+  }
 })();

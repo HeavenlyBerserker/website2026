@@ -82,7 +82,18 @@ a:hover {
 
   .portrait {
     order: -1;
-    margin: 0 0 0.85em;
+    display: block;
+    width: 90%;
+    max-width: 90vw;
+    margin: 0 auto 0.85em;
+    align-self: center;
+  }
+
+  .portrait img {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100%;
+    margin: 0 auto;
   }
 
   .background-text {
