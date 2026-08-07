@@ -1,0 +1,109 @@
+/* Course site extras (used with style.css) */
+
+.course-header {
+  background-color: var(--surface);
+  padding: 1.75em 1.5em 1em;
+  text-align: center;
+  border-bottom: none;
+}
+
+.course-header h1 {
+  margin: 0;
+  font-family: 'Source Serif 4', Georgia, Times, serif;
+  font-size: clamp(1.5rem, 4vw, 2.1rem);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.course-header h1 a {
+  color: inherit;
+  border-bottom: none;
+}
+
+.course-header .course-term {
+  display: block;
+  margin-top: 0.4em;
+  font-family: 'Source Sans 3', Helvetica, sans-serif;
+  font-size: 0.95em;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.course-crumb {
+  text-align: center;
+  font-family: 'Source Sans 3', Helvetica, sans-serif;
+  font-size: 0.85em;
+  letter-spacing: 0.04em;
+  color: var(--light);
+  margin-top: 0.75em;
+}
+
+.course-crumb a {
+  color: var(--muted);
+  border-bottom: none;
+}
+
+.course-crumb a:hover {
+  color: var(--accent);
+}
+
+.calendar {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1em;
+}
+
+.calendar th,
+.calendar td {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 1em;
+  text-align: left;
+  vertical-align: top;
+  padding: 0.55em 0.75em 0.55em 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.calendar th {
+  font-family: 'Source Sans 3', Helvetica, sans-serif;
+  font-size: 0.85em;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.calendar .date {
+  white-space: nowrap;
+  width: 7.5em;
+  color: var(--muted);
+  font-family: 'Source Sans 3', Helvetica, sans-serif;
+  font-size: 0.95em;
+}
+
+.placeholder-note {
+  font-style: italic;
+  color: var(--muted);
+}
+
+@media (max-width: 600px) {
+  .calendar .date {
+    display: block;
+    width: auto;
+    margin-bottom: 0.15em;
+  }
+
+  .calendar td {
+    display: block;
+    padding: 0.35em 0;
+  }
+
+  .calendar tr {
+    display: block;
+    padding: 0.65em 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .calendar thead {
+    display: none;
+  }
+}

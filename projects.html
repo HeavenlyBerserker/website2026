@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Projects by Hong Xu.">
+  <title>Projects — Hong Xu</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="canonical" href="./projects.html">
+</head>
+<body>
+  <header>
+    <h1>
+      <a href="index.html">Hong Xu</a>
+      <span class="chinese-name">许鸿</span>
+    </h1>
+  </header>
+
+  <nav>
+    <div class="nav-container">
+      <a href="index.html" class="nav-link">home</a>
+      <a href="teaching.html" class="nav-link">teaching</a>
+      <a href="research.html" class="nav-link">research</a>
+      <a href="projects.html" class="nav-link" aria-current="page">projects</a>
+      <a href="publications.html" class="nav-link">publications</a>
+      <a href="contact.html" class="nav-link">contact</a>
+    </div>
+  </nav>
+
+  <main class="page">
+    <h2 id="projects">Projects</h2>
+    <p>
+      A concise list of projects beyond the publication record—software,
+      engineering work, and exploratory efforts.
+    </p>
+
+    <div class="project">
+      <h3>NovaSSM</h3>
+      <p class="meta">Shape modeling sandbox</p>
+      <p>
+        A PyTorch reimplementation of the ShapeWorks optimizer as a sandbox for
+        trying new loss functions and approaches to shape modeling. Autograd
+        removes the need to write gradients by hand, and Python makes it faster
+        to prototype ideas than extending the full ShapeWorks backend.
+      </p>
+    </div>
+
+    <div class="project">
+      <h3>ShapeWorks</h3>
+      <p class="meta">
+        <a href="https://github.com/SCIInstitute/ShapeWorks">github.com/SCIInstitute/ShapeWorks</a>
+      </p>
+      <p>
+        At the SCI Institute I contributed to
+        <a href="https://github.com/SCIInstitute/ShapeWorks">ShapeWorks</a>, an
+        open-source suite for automated construction of compact statistical
+        landmark-based shape models. I led implementation of shape modeling for
+        arbitrary regions of interest—a research problem with substantial
+        engineering depth.
+      </p>
+    </div>
+
+    <div class="project">
+      <h3>Cryo-electron microscopy</h3>
+      <p class="meta">Automated grid screening</p>
+      <p>
+        Worked on automating single-particle cryo-EM grid screening with deep
+        learning. We built a dataset with collaborators, wrote a Python/Tkinter
+        GUI for collecting quality labels, and trained a quality-assessment
+        network to predict labels for grid areas. See also the
+        <a href="https://arxiv.org/abs/2007.05593">MICCAI 2020 paper</a>.
+      </p>
+    </div>
+
+    <div class="project">
+      <h3>EXXON CUDA GPU</h3>
+      <p class="meta">Industry collaboration</p>
+      <p>
+        Proprietary work for ExxonMobil writing CUDA code to accelerate research
+        software for modeling geological features.
+      </p>
+    </div>
+
+    <div class="project">
+      <h3>Personal &amp; exploratory software</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/HeavenlyBerserker/AutoCookieClicker.git">CookieClicker autoplayer</a>
+          — screen automation with pynput; explored OpenCV template matching for
+          real-time recognition.
+        </li>
+        <li>
+          FIFAMagic — Selenium-based trading helper for FIFA Ultimate Team 18.
+        </li>
+        <li>
+          <a href="https://github.com/HeavenlyBerserker/MidiWriter.git">Ragtime music translator</a>
+          — probabilistic translation of classical MIDI into ragtime-like output
+          (Java).
+        </li>
+        <li>
+          <a href="https://github.com/HeavenlyBerserker/Lego-VR.git">Lego VR</a>
+          — senior project: VR brick-building with Unity/C# and HTC Vive.
+        </li>
+      </ul>
+    </div>
+
+    <h2 id="class-projects">Notable class projects</h2>
+    <ul>
+      <li>CUDA: tiled matrix multiplication and bag-of-words implementations.</li>
+      <li>Machine learning: SVM, decision trees, and random forests.</li>
+      <li>NLP: traditional NLP pipeline for a Kaggle challenge (strong among non-deep-learning entries).</li>
+      <li>AI algorithms: Dijkstra, A*, minimax, and related search methods.</li>
+      <li>Graphics: a basic ray tracer.</li>
+    </ul>
+  </main>
+
+  <footer>
+    <svg class="footer-mark" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true">
+      <g fill="none" stroke="#2a6f6b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </g>
+    </svg>
+    <div class="footer-links">
+      <a href="https://scholar.google.com/citations?user=iXbtBI0AAAAJ&amp;hl=en">scholar</a>
+      <a href="https://github.com/HeavenlyBerserker">github</a>
+      <a href="https://www.linkedin.com/in/hong-xu-ph-d-b2b5a2116">linkedin</a>
+    </div>
+    <p id="last-updated"></p>
+  </footer>
+  <script src="js/last-updated.js"></script>
+</body>
+</html>
