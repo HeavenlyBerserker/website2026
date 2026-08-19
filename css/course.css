@@ -96,6 +96,12 @@
   margin-top: 0.3em;
 }
 
+.materials {
+  margin-top: 0.2em;
+  font-family: 'Source Sans 3', Helvetica, sans-serif;
+  font-size: 0.9em;
+}
+
 .cal-label {
   display: inline-block;
   font-family: 'Source Sans 3', Helvetica, sans-serif;
