@@ -1,1 +1,2 @@
-courses/comp322-f26/assignments/*.ipynb
+# Keep instructor solutions out of the public course site.
+courses/comp322-f26/assignments/*_solutions.ipynb
