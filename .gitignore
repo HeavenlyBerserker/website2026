@@ -1,3 +1,6 @@
 # COMP 322 assignments stay off the public site, except the PyTorch Wizard.
 courses/comp322-f26/assignments/*
 !courses/comp322-f26/assignments/COMP322_pytorch_wizard_exercises.ipynb
+
+# Exam drafts stay off the public site.
+filelatexs_hidden/

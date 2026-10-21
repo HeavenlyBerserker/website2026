@@ -1,0 +1,639 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs}
+\usepackage{enumitem}
+
+\setlist[itemize]{nosep,leftmargin=1.4em}
+\setlist[enumerate]{nosep,leftmargin=1.4em}
+
+\newcommand{\img}{I}
+\newcommand{\filt}{f}
+\newcommand{\outp}{h}
+\newcommand{\conv}{\ast}
+\newcommand{\corr}{\star}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+
+\title{COMP 322: Standard formulas\\
+\large Computer Vision and Image Processing, Fall 2026}
+\author{Hong Xu}
+\date{}
+
+\begin{document}
+\maketitle
+
+\noindent
+This note fixes the notation for the formulas used so far: filters and convolution, sampling, Fourier transforms, edges, camera geometry and calibration, and the deep-learning and CNN material. When a later homework writes one of these, it should match the symbols here.
+
+\section{Notation}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Symbol & Meaning \\
+\midrule
+$\img[m,n]$ & Image value at row $m$, column $n$. Continuous form: $\img(x,y)$. \\
+$\filt[k,l]$ & Filter, also called the kernel. \\
+$\outp[m,n]$ & Filter output. \\
+$\conv$ & Convolution: the kernel is flipped before the multiply-add. \\
+$\corr$ & Correlation: the kernel is used as written. \\
+$\sigma$ & Standard deviation of a Gaussian. \\
+$f$, $f_{\max}$, $f_s$ & Frequency, highest frequency in a signal, sampling frequency. \\
+$\mathbf{X}$, $\mathbf{x}$ & World point and image point, homogeneous. \\
+$K$, $R$, $\mathbf{t}$, $M$ & Intrinsics, rotation, translation, and the $3\times 4$ camera matrix. \\
+$W$, $\mathbf{b}$, $s$ & Weights, bias, and class scores (logits). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Indices $m,n$ locate a pixel. Indices $k,l$ locate a tap inside the kernel. A sum written $\sum_{k,l}$ runs over every tap of the kernel.
+
+Two products show up under the same English word ``convolution.'' In the filtering lectures, $\conv$ flips the kernel and $\corr$ does not. In PyTorch, \texttt{Conv2d} does not flip the kernel, so it implements $\corr$ and still calls the result a convolution. The CNN section below uses the PyTorch convention and says so.
+
+\section{Filters}
+
+A filter replaces each sample by a function of a local window. A \emph{linear} filter is a weighted sum of that window. The same weights slide to every pixel, which is shift invariance.
+
+\subsection{Correlation and convolution}
+
+Two-dimensional correlation, the kernel as written:
+\begin{equation}
+\outp[m,n]
+=
+\sum_{k,l} \filt[k,l]\,\img[m+k,n+l].
+\label{eq:corr}
+\end{equation}
+Two-dimensional convolution flips the kernel:
+\begin{equation}
+\outp[m,n]
+=
+(\img\conv\filt)[m,n]
+=
+\sum_{k,l} \filt[k,l]\,\img[m-k,n-l].
+\label{eq:conv}
+\end{equation}
+So $\img\conv\filt$ equals correlation of $\img$ with $\filt$ rotated by $180^\circ$. If $\filt$ is symmetric under that rotation, the two operations agree. A Gaussian is symmetric. A Sobel kernel is not.
+
+In SciPy, \texttt{correlate2d(I, f)} is \eqref{eq:corr} and \texttt{convolve2d(I, f)} is \eqref{eq:conv}.
+
+\subsection{What a linear filter may do}
+
+Let $\ast$ stand for either product when the identity does not depend on the flip.
+\begin{align}
+\img\ast(\filt_1+\filt_2)
+&=
+\img\ast\filt_1+\img\ast\filt_2,
+&
+&\text{linearity,} \\
+(a\img)\ast\filt
+&=
+a\,(\img\ast\filt),
+&
+&\text{scalars factor out,} \\
+a\conv b &= b\conv a,
+&
+a\conv(b\conv c)&=(a\conv b)\conv c.
+\end{align}
+Convolution also distributes over addition. The last two identities are for convolution only: correlation is not commutative and not associative, because each correlation flips only one argument. The identity kernel is a $1$ at the center and $0$ elsewhere. In one dimension, $e=[0,0,1,0,0]$ and $a\conv e=a$.
+
+Shift invariance: shifting the image and then filtering is the same as filtering and then shifting. Near the border the window hangs off the image. The usual fills are: zeros (clip), wrap, copy the edge pixel, or reflect across the edge. Output sizes, with a kernel of odd width $K=2r+1$:
+\begin{itemize}
+\item \texttt{full}: pad with zeros, output is larger by $r$ on each side.
+\item \texttt{same}: return the original height and width.
+\item \texttt{valid}: no padding, output shrinks by $r$ on each side.
+\end{itemize}
+
+\subsection{Kernels used in class}
+
+The box (moving average) replaces each pixel by the mean of its neighborhood. For a $3\times 3$ window every weight is $1/9$, and the weights sum to $1$, so a constant image is unchanged.
+
+The Gaussian, continuous and separable:
+\begin{equation}
+G_\sigma(x,y)
+=
+\frac{1}{2\pi\sigma^2}
+\exp\!\left(-\frac{x^2+y^2}{2\sigma^2}\right)
+=
+G_\sigma(x)\,G_\sigma(y).
+\end{equation}
+A discrete kernel is a sampled Gaussian, normalized so the taps sum to $1$. The rule of thumb is a half-width of about $3\sigma$, because the tails are then near zero. Convolution of two Gaussians is a Gaussian, and two passes with width $\sigma$ equal one pass with width $\sigma\sqrt{2}$.
+
+Sobel, horizontal and vertical derivatives. $S_x$ responds to a vertical edge:
+\begin{equation}
+S_x=
+\begin{bmatrix}
+-1 & 0 & 1 \\
+-2 & 0 & 2 \\
+-1 & 0 & 1
+\end{bmatrix},
+\qquad
+S_y=
+\begin{bmatrix}
+-1 & -2 & -1 \\
+ 0 &  0 &  0 \\
+ 1 &  2 &  1
+\end{bmatrix}.
+\end{equation}
+The row or column $[1,2,1]$ is a small binomial smooth, a discrete stand-in for a Gaussian, applied along the edge.
+
+Sharpening accentuates the difference from the local average. If $e$ is the identity kernel and $b$ is a box that sums to $1$,
+\begin{equation}
+\filt_{\mathrm{sharp}}=2e-b,
+\end{equation}
+which also sums to $1$.
+
+A median filter writes the middle value of the window after sorting. It removes salt-and-pepper noise without the blur of a mean. It is not a convolution: there are no fixed weights.
+
+\subsection{Separability and template matching}
+
+If $\filt[k,l]=u[k]\,v[l]$, a 2D convolution is two 1D convolutions. On an $M\times N$ image and a $P\times Q$ kernel the multiply-add counts are about $MNPQ$ for the 2D pass and $MN(P+Q)$ for the separable pass. The speedup is $PQ/(P+Q)$. A $9\times 9$ kernel is about $4.5$ times cheaper when it separates. The Gaussian separates.
+
+Template matching slides a patch across the image and looks for a peak. Use correlation when the patch is not symmetric. Raw correlation grows with brightness. Subtract the mean of the image and of the patch first, so a bright region is not an automatic match:
+\begin{equation}
+\img_0=\img-\overline{\img},
+\qquad
+\filt_0=\filt-\overline{\filt},
+\qquad
+\outp=\img_0\corr\filt_0.
+\end{equation}
+
+\section{Sampling and aliasing}
+
+Subsampling by $2$ keeps every other row and every other column. An image pyramid repeats that until one pixel remains. Without a low-pass filter first, high frequencies fold into lower ones. Two different signals then produce the same samples. That is aliasing.
+
+Nyquist--Shannon: a signal whose highest frequency is $f_{\max}$ is determined by its samples when
+\begin{equation}
+f_s\ge 2f_{\max}.
+\end{equation}
+The Nyquist frequency is $f_s/2$. Frequencies above it are aliases of frequencies below it. Before keeping every other pixel, remove frequencies above half the new sampling rate. A Gaussian does that. The blur throws away detail, and that is preferable to aliasing. Downsampling by $2$ in practice:
+\begin{enumerate}
+\item $\img_{\mathrm{blur}}=\img\conv G_\sigma$ with a small Gaussian, for example $7\times 7$ and $\sigma=1$.
+\item $\img_{\mathrm{small}}=\img_{\mathrm{blur}}[::2,::2]$.
+\end{enumerate}
+A Gaussian pyramid is this operation repeated. A high-pass image is the original minus a low-pass image. A hybrid image adds the low frequencies of one picture to the high frequencies of another.
+
+\section{Fourier transforms}
+
+A periodic signal is a sum of sines and cosines. The square-wave example from lecture, with fundamental frequency $f$,
+\begin{equation}
+g(t)=\sin(2\pi f t)+\frac13\sin(2\pi(3f)t)+\cdots
+\end{equation}
+keeps the odd harmonics with amplitudes $1,1/3,1/5,\ldots$.
+
+Euler's formula turns amplitude and phase into one complex weight:
+\begin{equation}
+e^{i\theta}=\cos\theta+i\sin\theta.
+\end{equation}
+The analysis transforms:
+\begin{align}
+G(f)
+&=
+\int_{-\infty}^{\infty} g(t)\,e^{-i 2\pi f t}\,\mathrm{d}t,
+&
+G[k]
+&=
+\sum_{n=0}^{N-1} g[n]\,e^{-i 2\pi kn/N}.
+\end{align}
+The discrete sum is the DFT. With an image of width $N$, the frequency index runs over $k=-N/2,\ldots,N/2$, and the highest frequency that is not an alias is the Nyquist frequency $N/2$. The fast Fourier transform computes this in $O(N\log N)$ rather than $O(N^2)$.
+
+Write $G[k]=|G[k]|\,e^{i\phi[k]}$. The amplitude $|G[k]|$ says how much of frequency $k$ is present. The phase $\phi[k]$ says where that wave sits. A spatial shift leaves the amplitude unchanged and adds a term linear in $k$ to the phase. For a real signal, $G[-k]=\overline{G[k]}$, so the displayed 2D spectrum is symmetric through the origin. The zero-frequency bin is the mean of the signal (the DC offset). Natural images are bright at low frequencies and fall off toward high frequencies. Most of what we recognize sits in the phase.
+
+The convolution theorem is the reason the transform is worth computing:
+\begin{equation}
+\mathcal{F}\{\img\conv\filt\}
+=
+\mathcal{F}\{\img\}\cdot\mathcal{F}\{\filt\},
+\end{equation}
+a pointwise product of the transforms. The steps are: FFT of the image, FFT of the kernel, multiply, inverse FFT. Both arrays are padded to the same size, a power of two, before the transform. For a large kernel this is cheaper than sliding the kernel in space.
+
+A box in space is a sinc in frequency, and the reverse:
+\begin{equation}
+\operatorname{sinc}(x)=\frac{\sin x}{x}.
+\end{equation}
+The sharp cutoff of a box needs every frequency, which is why a box blur rings (the Gibbs effect) and a Gaussian blur does not. The transform of a Gaussian is a Gaussian whose variance is inverted: a wide blur in space is a narrow blob in frequency. Deconvolution divides by $\mathcal{F}\{\filt\}$. Where that transform is zero, or tiny compared with noise, the quotient blows up. A Gaussian is zero only at infinity, but in floating point the high-frequency bins are small enough that division is unstable. That is why deconvolution needs regularization even when the kernel is known.
+
+JPEG applies a discrete cosine transform on $8\times 8$ blocks. The coefficient $B(0,0)$ is the DC term, the average of the block. Coefficients toward the lower right are higher frequencies and are quantized more coarsely.
+
+\section{Edges}
+
+An edge is a sharp change in intensity. Along a scanline the edge sits at an extremum of the derivative. Noise makes a raw derivative useless, so the image is smoothed first. Differentiation passes through convolution:
+\begin{equation}
+\frac{\mathrm{d}}{\mathrm{d}x}(\img\conv G)
+=
+\img\conv\frac{\mathrm{d}G}{\mathrm{d}x}.
+\end{equation}
+One derivative-of-Gaussian kernel does both jobs. On pixels the smallest step is $1$, and the centered difference estimates the derivative at $x$ rather than halfway to the next pixel:
+\begin{equation}
+\img_x[x]\approx\frac{\img[x+1]-\img[x-1]}{2},
+\qquad
+\img_x[x]\approx\img[x+1]-\img[x]
+\quad\text{(one-sided).}
+\end{equation}
+In two dimensions,
+\begin{equation}
+\|\nabla\img\|=\sqrt{\img_x^2+\img_y^2},
+\qquad
+\theta=\operatorname{atan2}(\img_y,\img_x).
+\end{equation}
+$\theta$ is the direction of steepest ascent, perpendicular to the edge. A large $\sigma$ finds coarse edges and a small $\sigma$ finds fine ones. Smoothing removes noise and also widens the ridge, so the peak is less sharply located.
+
+Canny's detector, in order:
+\begin{enumerate}
+\item Filter with $\partial G_\sigma/\partial x$ and $\partial G_\sigma/\partial y$. Sobel is the fast integer version of the same idea.
+\item Form the magnitude and the orientation $\theta$.
+\item Non-maximum suppression: along the gradient, keep a pixel only when it is strictly larger than both neighbors. Those neighbors are interpolated when $\theta$ is not along a pixel axis.
+\item Hysteresis: pixels above a high threshold start an edge, pixels below a low threshold are dropped, and pixels in between are kept only when they connect to a strong edge.
+\end{enumerate}
+
+\section{Camera geometry}
+
+\subsection{Planes and 2D maps}
+
+Scaling, rotation, and shear are linear. Translation is not, until the point is written in homogeneous coordinates. A Cartesian point $(x,y)$ becomes $(x,y,1)$, and $(X,Y,Z)$ becomes $(X,Y,Z,1)$. The same Cartesian point is any nonzero scale of that vector: $(x,y,w)$ and $\lambda(x,y,w)$ are one point, recovered by
+\begin{equation}
+(x,y)=\left(\frac{x_h}{w},\frac{y_h}{w}\right)
+\quad\text{when }w\neq 0.
+\end{equation}
+A point with $w=0$ is a direction, the image of a point at infinity. Parallel lines meet there.
+
+Uniform scale, rotation by $\theta$, and translation:
+\begin{equation}
+S=
+\begin{bmatrix} s & 0 \\ 0 & s \end{bmatrix},
+\qquad
+R_\theta=
+\begin{bmatrix}
+\cos\theta & -\sin\theta \\
+\sin\theta & \cos\theta
+\end{bmatrix},
+\qquad
+\begin{bmatrix} x' \\ y' \end{bmatrix}
+=
+R_\theta
+\begin{bmatrix} x \\ y \end{bmatrix}.
+\end{equation}
+$R_\theta^{-1}=R_{-\theta}=R_\theta^{\mathsf T}$. An affine map is any composition of scale, rotation, shear, and translation. In homogeneous form it is one matrix
+\begin{equation}
+\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix}
+=
+\begin{bmatrix}
+a & b & t_x \\
+c & d & t_y \\
+0 & 0 & 1
+\end{bmatrix}
+\begin{bmatrix} x \\ y \\ 1 \end{bmatrix}.
+\end{equation}
+Affine maps send lines to lines and parallel lines to parallel lines. A projective map, or homography, is an invertible $3\times 3$ matrix defined up to scale, so it has $8$ degrees of freedom. Lines stay lines. Parallel lines need not stay parallel.
+
+\subsection{The pinhole}
+
+The camera at the origin looks along $+Z$. A world point $(X,Y,Z)$ with $Z>0$ hits the plane $Z=f$ at
+\begin{equation}
+u=f\frac{X}{Z},
+\qquad
+v=f\frac{Y}{Z}.
+\label{eq:pinhole}
+\end{equation}
+$f$ is the focal length. Length, area, and angle are lost. Straight lines survive. Parallel lines in the world meet at a vanishing point. Parallel lines on one plane meet on a vanishing line, for example the horizon.
+
+The same map with a principal point $(c_x,c_y)$, two focal lengths, and skew $s$ is $\mathbf{x}=K[R\mid\mathbf{t}]\,\mathbf{X}$:
+\begin{equation}
+K=
+\begin{bmatrix}
+f_x & s & c_x \\
+0 & f_y & c_y \\
+0 & 0 & 1
+\end{bmatrix},
+\qquad
+[R\mid\mathbf{t}]=
+\begin{bmatrix}
+R & \mathbf{t}
+\end{bmatrix},
+\qquad
+M=K[R\mid\mathbf{t}].
+\label{eq:camera}
+\end{equation}
+$\mathbf{X}=(X,Y,Z,1)^{\mathsf T}$ and $\mathbf{x}=(u,v,1)^{\mathsf T}$ are homogeneous, so the Cartesian pixel is $(x_1/x_3,\,x_2/x_3)$. $K$ has $5$ degrees of freedom. $R$ and $\mathbf{t}$ have $6$. The product $M$ is $3\times 4$ and defined up to scale, so a general camera has $11$ degrees of freedom. The lecture's $(\alpha,\beta,u_0,v_0)$ is this same $K$, with $f_x=\alpha$, $f_y=\beta$, and $(c_x,c_y)=(u_0,v_0)$.
+
+Equation \eqref{eq:pinhole} is the special case $R=I$, $\mathbf{t}=\mathbf{0}$, $s=0$, $c_x=c_y=0$, and $f_x=f_y=f$.
+
+Orthographic projection drops the division by $Z$ (the camera is infinitely far, and rays are parallel). Weak perspective, or scaled orthographic, uses one depth for a whole nearby object: $u=(f/Z_0)X$ and $v=(f/Z_0)Y$.
+
+\section{Calibration}
+
+\subsection{A line, as the warmup}
+
+Given points $(x_i,y_i)$, the best line $y=mx+b$ in the least-squares sense minimizes
+\begin{equation}
+E=\sum_i (y_i-mx_i-b)^2=\|A\mathbf{p}-\mathbf{y}\|^2,
+\end{equation}
+with one row $(x_i,\,1)$ of $A$ per point and $\mathbf{p}=(m,b)^{\mathsf T}$. The normal equations and the closed form are
+\begin{equation}
+A^{\mathsf T}A\,\mathbf{p}=A^{\mathsf T}\mathbf{y},
+\qquad
+\mathbf{p}=(A^{\mathsf T}A)^{-1}A^{\mathsf T}\mathbf{y}.
+\end{equation}
+\texttt{numpy.linalg.lstsq} solves this. The same pattern, with a homogeneous right-hand side, is the camera estimate below.
+
+\subsection{The direct linear transform}
+
+Write $M=(m_{ij})$ and $\mathbf{x}=M\mathbf{X}$, so $u=x_1/x_3$ and $v=x_2/x_3$. Clearing the denominator gives two equations per correspondence $(X,Y,Z)\leftrightarrow(u,v)$:
+\begin{align}
+\begin{aligned}
+0&=m_{11}X+m_{12}Y+m_{13}Z+m_{14}-u(m_{31}X+m_{32}Y+m_{33}Z+m_{34}),\\
+0&=m_{21}X+m_{22}Y+m_{23}Z+m_{24}-v(m_{31}X+m_{32}Y+m_{33}Z+m_{34}).
+\end{aligned}
+\label{eq:dlt}
+\end{align}
+Stacking \eqref{eq:dlt} for every point produces $A\mathbf{m}=\mathbf{0}$, where $\mathbf{m}$ is the $12$ entries of $M$ in row-major order. The zero vector satisfies this and is useless. The estimate is the unit vector $\mathbf{m}$ that minimizes $\|A\mathbf{m}\|$, which is the last right singular vector of $A$:
+\begin{equation}
+A=U\Sigma V^{\mathsf T},
+\qquad
+\mathbf{m}=V_{:,12}
+\quad\text{(the last row of \texttt{Vh} from \texttt{numpy.linalg.svd}).}
+\end{equation}
+Reshape $\mathbf{m}$ into the $3\times 4$ matrix $M$.
+
+The camera center $\mathbf{C}=(X,Y,Z,W)^{\mathsf T}$ is the world point that cannot be imaged: $M\mathbf{C}=\mathbf{0}$. It is the last right singular vector of $M$. Divide the first three entries by $W$ to return to Cartesian coordinates.
+
+The reprojection error of a candidate $M$ is the root mean square distance between measured pixels $(u_i,v_i)$ and the pixels obtained from $M\mathbf{X}_i$:
+\begin{equation}
+\mathrm{RMSE}
+=
+\sqrt{\frac{1}{N}\sum_{i=1}^{N}
+\left((u_i-\hat u_i)^2+(v_i-\hat v_i)^2\right)}.
+\end{equation}
+
+To split $M=K[R\mid\mathbf{t}]$, factor the left $3\times 3$ block as $A=KR$ (RQ decomposition), force the diagonal of $K$ to be positive, and set $\mathbf{t}=K^{-1}\mathbf{m}_4$ with $\mathbf{m}_4$ the last column of $M$. Then $f_x=K_{11}$, $f_y=K_{22}$, $s=K_{12}$, $c_x=K_{13}$, and $c_y=K_{23}$.
+
+\section{Deep learning}
+
+\subsection{Distances, scores, and losses}
+
+$k$-nearest neighbors labels a query by the majority label among the $k$ closest training points. The two distances used in lecture, for vectors $\mathbf{a}$ and $\mathbf{b}$:
+\begin{equation}
+d_1(\mathbf{a},\mathbf{b})=\sum_i |a_i-b_i|,
+\qquad
+d_2(\mathbf{a},\mathbf{b})=\sqrt{\sum_i (a_i-b_i)^2}.
+\end{equation}
+$k$ and the choice of distance are hyperparameters. They are chosen on a validation set, or by cross-validation, and the test set is touched once at the end. $k=1$ fits the training set perfectly and does not tell you about new data.
+
+A linear classifier turns a feature vector $\mathbf{x}$ into one score per class:
+\begin{equation}
+\mathbf{s}=f(\mathbf{x},W)=W\mathbf{x}+\mathbf{b}.
+\end{equation}
+$s_c$ is the logit of class $c$. The softmax turns logits into probabilities, and the loss is the negative log probability of the true class $y$:
+\begin{equation}
+p_c=\frac{e^{s_c}}{\sum_{j=1}^{C} e^{s_j}},
+\qquad
+L_i=-\log p_{y_i},
+\qquad
+L=\frac{1}{N}\sum_{i=1}^{N} L_i.
+\label{eq:softmax}
+\end{equation}
+If every class is equally likely, $p_y=1/C$ and $L_i=\log C$. For $C=10$ that is about $2.3$, which is why a CIFAR run starts near there. In PyTorch, \texttt{CrossEntropyLoss} takes the logits and applies \eqref{eq:softmax} itself. Do not softmax first.
+
+A regression target is a real number, or a vector of them. The losses from the assignment are the mean absolute error and the mean squared error,
+\begin{equation}
+L_1=\frac{1}{N}\sum_i |\hat y_i-y_i|,
+\qquad
+L_2=\frac{1}{N}\sum_i (\hat y_i-y_i)^2.
+\end{equation}
+\texttt{L1Loss} and \texttt{MSELoss} average over every element of an $(N,D)$ prediction. Part~1 of the PyTorch assignment is the case $D=1$.
+
+Binary classification with one logit uses
+\begin{equation}
+L=-\frac{1}{N}\sum_i\Big(y_i\log\sigma(s_i)+(1-y_i)\log(1-\sigma(s_i))\Big),
+\quad
+\sigma(s)=\frac{1}{1+e^{-s}},
+\end{equation}
+which is \texttt{BCEWithLogitsLoss}. The sigmoid stays inside the loss. Two classes can instead be two logits and \eqref{eq:softmax}. That is the form that also works for ten classes.
+
+\subsection{Partials and the gradient}
+
+A loss depends on many numbers at once: every weight, every bias, and every value computed on the way to the output. The ordinary derivative $\mathrm{d}f/\mathrm{d}x$ is the slope of a function of one variable,
+\begin{equation}
+\frac{\mathrm{d}f}{\mathrm{d}x}
+=
+\lim_{h\to 0}\frac{f(x+h)-f(x)}{h}.
+\end{equation}
+A partial derivative is that same limit with every other argument held fixed. Training asks, for each parameter separately, how the loss moves when only that parameter is nudged, so the derivative that answers the question is a partial:
+\begin{equation}
+\frac{\partial L}{\partial w}
+=
+\lim_{h\to 0}
+\frac{L(\ldots,w+h,\ldots)-L(\ldots,w,\ldots)}{h}.
+\end{equation}
+
+The gradient of $L$ with respect to a vector or a matrix is the array of all of those partials, stored in the same shape as the variable:
+\begin{equation}
+(\nabla_{\mathbf{w}} L)_j=\frac{\partial L}{\partial w_j},
+\qquad
+(\nabla_W L)_{ij}=\frac{\partial L}{\partial W_{ij}}.
+\end{equation}
+In one dimension the derivative is the slope. In several dimensions the gradient is the vector of partial derivatives, one along each coordinate. The slope felt while walking in a unit direction $\mathbf{u}$ is the directional derivative $\nabla L\cdot\mathbf{u}$. That slope is most negative when $\mathbf{u}$ points along $-\nabla L$, and the steepest slope has size $\|\nabla L\|$. The update $W\leftarrow W-\eta\nabla_W L$ is a step in that downhill direction. One partial would move only the coordinate it belongs to.
+
+The two symbols $\mathrm{d}$ and $\partial$ mark different questions, and mixing them drops terms.
+\begin{itemize}
+\item $\partial L/\partial z$ is local. It holds the other inputs of that one function fixed. On an influence diagram it is the label on a single edge.
+\item $\mathrm{d}L/\mathrm{d}x$ is total. It follows every path by which $L$ depends on $x$. If $x$ reaches the loss through intermediates $z_1$ and $z_2$,
+\begin{equation}
+\frac{\mathrm{d}L}{\mathrm{d}x}
+=
+\frac{\partial L}{\partial z_1}\frac{\partial z_1}{\partial x}
++
+\frac{\partial L}{\partial z_2}\frac{\partial z_2}{\partial x}.
+\label{eq:paths}
+\end{equation}
+The lecture's influence diagram says the same thing: sum the products of partials over every path out of $x$. Keeping only one partial omits the other paths.
+\item A gate with one input, such as a sigmoid of one pre-activation, has an ordinary derivative. A parameter vector has a gradient. Gradient descent steps with the gradient. \texttt{loss.backward()} stores, in \texttt{tensor.grad}, the total derivative of the scalar loss with respect to that tensor, in the tensor's own shape. Each entry of that tensor is still a partial, which is why the formulas below keep the symbol $\partial$.
+\end{itemize}
+
+\subsection{Names on the deep-learning slides}
+
+The CMU 11-785 lecture uses a few names that this note does not take as the default. The objects are the same.
+
+\emph{Divergence.} $\operatorname{Div}(Y,d)$ is the error on one training pair. $Y$ is the network output, written $\hat{\mathbf{y}}$ or $\mathbf{y}^{(N)}$ here. $d$ is the desired output, the target, written $y$ or $t$ here. The per-example loss is that divergence:
+\begin{equation}
+\ell(\hat{\mathbf{y}},y)=\operatorname{Div}(Y,d).
+\end{equation}
+The loss, also called the empirical risk, is the divergences gathered over the training set. The slides sum them. This note averages them,
+\begin{equation}
+L=\frac{1}{N}\sum_{i=1}^{N}\ell(\hat{\mathbf{y}}_i,y_i).
+\end{equation}
+The gradient of a sum is the sum of the gradients, and the gradient of the average is that sum divided by $N$. ``The actual gradient is the sum or the average of the per-example derivatives'' is the slide's way of saying which of those two gatherings is in use.
+
+\emph{Ordinary $\mathrm{d}$ and partial $\partial$.} At the output the slides write $\mathrm{d}\,\operatorname{Div}/\mathrm{d}\,\mathbf{y}^{(N)}$. The ordinary $\mathrm{d}$ is appropriate there: the target is held fixed, and this is the derivative of the divergence with respect to the network output. Inside the net, an edge is a partial, because that gate has several inputs and the edge is one of them. The backward pass multiplies the local partials. Where several edges leave a node, \eqref{eq:paths} adds the contributions, and the sum is the total derivative.
+
+\emph{The overdot.} A dot over a symbol means the derivative of the divergence with respect to that symbol. So $\dot{\mathbf{y}}$ means $\mathrm{d}\,\operatorname{Div}/\mathrm{d}\mathbf{y}$.
+
+\emph{Layer symbols.} Layer $k$ computes a pre-activation and then an activation. With $\mathbf{y}^{(0)}$ the input,
+\begin{equation}
+\mathbf{z}^{(k)}=W^{(k)}\mathbf{y}^{(k-1)}+\mathbf{b}^{(k)},
+\qquad
+\mathbf{y}^{(k)}=f_k(\mathbf{z}^{(k)}).
+\end{equation}
+The pair $(z,a)$ in the next subsection is $(\mathbf{z}^{(k)},\mathbf{y}^{(k)})$. The function $f_N$ is the activation on the output layer.
+
+\emph{Bias as a weight.} The slides append a constant $1$ to the layer input and give that extra input its own weight. That weight is the bias, so the formulas can be written as one matrix product. The partial of the loss with respect to that extra weight equals $\partial L/\partial b$. This note keeps $\mathbf{b}$ as its own vector.
+
+\emph{A row rather than a column.} The slides define a derivative as the factor that multiplies a perturbation of the input to produce the perturbation of the output. For a scalar $L$ and a column $\mathbf{x}$ of length $n$,
+\begin{equation}
+\Delta L=\frac{\mathrm{d}L}{\mathrm{d}\mathbf{x}}\,\Delta\mathbf{x},
+\end{equation}
+so $\mathrm{d}L/\mathrm{d}\mathbf{x}$ is a row of length $n$: the transpose of the shape of $\mathbf{x}$. They call that row the gradient. This note and PyTorch store $\nabla_{\mathbf{x}}L$ as a column of the same shape as $\mathbf{x}$. The entries agree. The chain-rule product is written in the opposite order, which the next subsection shows both ways.
+
+\subsection{The neuron and the scalar chain rule}
+
+A unit computes an affine value and then a scalar nonlinearity $\phi$:
+\begin{equation}
+z=\mathbf{w}^{\mathsf T}\mathbf{x}+b,
+\qquad
+a=\phi(z).
+\end{equation}
+The sigmoid is $\sigma(z)$ above. The ReLU is $\phi(z)=\max(z,0)$. A threshold unit is constant almost everywhere, so it has no useful derivative. Sigmoid and ReLU are differentiable almost everywhere, which is what makes gradient descent possible. At the kink $z=0$ the ReLU derivative is undefined. A subgradient may take the value $0$ there. The slides flag this: the activation derivative in the backward pass may be a subgradient. Stacking linear layers with no nonlinearity collapses to one linear layer.
+
+For a nested scalar function the chain rule multiplies ordinary derivatives, outer function first:
+\begin{equation}
+\frac{\mathrm{d}L}{\mathrm{d}x}
+=
+\frac{\mathrm{d}L}{\mathrm{d}z}\frac{\mathrm{d}z}{\mathrm{d}x}.
+\end{equation}
+When $z=\mathbf{w}^{\mathsf T}\mathbf{x}+b$ has several inputs, each weight sees a partial:
+\begin{equation}
+\frac{\partial L}{\partial w_j}
+=
+\frac{\partial L}{\partial z}\,x_j,
+\qquad
+\frac{\partial L}{\partial b}
+=
+\frac{\partial L}{\partial z}.
+\end{equation}
+For the running example $p=wx+b$ and $L=(p-t)^2$, with the other of $w$ and $b$ held fixed,
+\begin{equation}
+\frac{\partial L}{\partial w}=2(p-t)\,x,
+\qquad
+\frac{\partial L}{\partial b}=2(p-t).
+\end{equation}
+The same pattern on a small graph with two inputs: let $q=x+y$ and $f=qz$, with the lecture values $x=-2$, $y=5$, $z=-4$. Then $q=3$ and $f=-12$. The local factors are $\partial f/\partial z=q=3$ and $\partial f/\partial q=z=-4$, and each input of the sum has local partial $1$. Sending $-4$ back along both edges gives $\partial f/\partial x=\partial f/\partial y=-4$. That is \eqref{eq:paths} with a product along each edge and a copy of the upstream derivative down every branch.
+
+\subsection{Backpropagation with vectors and matrices}
+
+A layer takes a vector in and produces a vector out, so the local factor on an edge is a matrix of partials. Vectors in this note are columns.
+
+The Jacobian of $\mathbf{y}=f(\mathbf{x})$, with $\mathbf{y}\in\R^m$ and $\mathbf{x}\in\R^n$, is the $m\times n$ matrix
+\begin{equation}
+\left(\frac{\partial\mathbf{y}}{\partial\mathbf{x}}\right)_{ij}
+=
+\frac{\partial y_i}{\partial x_j}.
+\end{equation}
+Rows run over outputs and columns run over inputs. For the affine map $\mathbf{z}=W\mathbf{x}+\mathbf{b}$ the Jacobian $\partial\mathbf{z}/\partial\mathbf{x}$ is exactly $W$, which is the special case stated in the lecture. An elementwise activation $\mathbf{y}=\phi(\mathbf{z})$ has a diagonal Jacobian: the $i$th diagonal entry is $\phi'(z_i)$, and the off-diagonal entries are zero because output $i$ does not depend on pre-activation $j\neq i$. A vector-valued activation that mixes coordinates has a full Jacobian.
+
+The chain rule still puts the outer derivative first. In the slides' row convention, with $\mathrm{d}L/\mathrm{d}\mathbf{z}$ a row,
+\begin{equation}
+\frac{\mathrm{d}L}{\mathrm{d}\mathbf{x}}
+=
+\frac{\mathrm{d}L}{\mathrm{d}\mathbf{z}}\,
+\frac{\partial\mathbf{z}}{\partial\mathbf{x}}.
+\label{eq:chain-row}
+\end{equation}
+The product is a row of length $n$. In the column convention used here and stored by PyTorch, that row is transposed, which reverses the order and transposes the Jacobian:
+\begin{equation}
+\nabla_{\mathbf{x}}L
+=
+\left(\frac{\partial\mathbf{z}}{\partial\mathbf{x}}\right)^{\mathsf T}
+\nabla_{\mathbf{z}}L.
+\label{eq:chain-col}
+\end{equation}
+\eqref{eq:chain-row} and \eqref{eq:chain-col} contain the same partials. Applying one formula with the other layout produces a shape that cannot multiply, which is the check the slides point out: the dimensions have to match.
+
+Three local rules are enough to walk a network backward. Let $\mathbf{g}=\nabla_{\mathbf{z}}L$, the column of partials of the loss with respect to the pre-activation.
+
+Elementwise activation $\mathbf{y}=\phi(\mathbf{z})$, with the incoming column $\nabla_{\mathbf{y}}L$ already known:
+\begin{equation}
+\nabla_{\mathbf{z}}L
+=
+\phi'(\mathbf{z})\odot\nabla_{\mathbf{y}}L.
+\end{equation}
+For a sigmoid, $\phi'(z)=\sigma(z)\bigl(1-\sigma(z)\bigr)$. For a ReLU, $\phi'(z)=1$ when $z>0$ and $\phi'(z)=0$ when $z<0$.
+
+Affine map $\mathbf{z}=W\mathbf{x}+\mathbf{b}$, with $W$ of shape $m\times n$, $\mathbf{x}$ of length $n$, and $\mathbf{z}$ of length $m$:
+\begin{align}
+\nabla_{\mathbf{x}}L&=W^{\mathsf T}\mathbf{g},
+&
+\nabla_W L&=\mathbf{g}\,\mathbf{x}^{\mathsf T},
+&
+\nabla_{\mathbf{b}}L&=\mathbf{g}.
+\label{eq:affine-grad}
+\end{align}
+The first line is \eqref{eq:chain-col} with $\partial\mathbf{z}/\partial\mathbf{x}=W$. The second line is the scalar rule $\partial L/\partial W_{ij}=g_i x_j$ written as one outer product, so $\nabla_W L$ has the shape of $W$. The third line is the scalar rule for a bias, one copy per output coordinate: the bias is added, so its partial equals the partial of the pre-activation it is added to. In the slide convention the same three results hold after the row $\mathrm{d}L/\mathrm{d}\mathbf{z}$ is turned into the column $\mathbf{g}$.
+
+One forward and one backward pass of a single training pair:
+\begin{enumerate}
+\item Forward: from $\mathbf{y}^{(0)}=\mathbf{x}$, store every $\mathbf{z}^{(k)}$ and $\mathbf{y}^{(k)}$. The derivatives need those stored values.
+\item At the output, form $\nabla_{\mathbf{y}^{(N)}}\ell$. For squared error on a scalar output, $\ell=(\hat y-t)^2$ and this derivative is $2(\hat y-t)$. For softmax cross-entropy on logits $\mathbf{s}$, with $\mathbf{p}=\operatorname{softmax}(\mathbf{s})$ and true class $y$, it is the column $\mathbf{p}-\mathbf{e}_y$.
+\item Through the activation, $\nabla_{\mathbf{z}^{(k)}}\ell=\phi'(\mathbf{z}^{(k)})\odot\nabla_{\mathbf{y}^{(k)}}\ell$.
+\item Through the affine map, apply \eqref{eq:affine-grad}. Keep $\nabla_W\ell$ and $\nabla_{\mathbf{b}}\ell$ for the update. Pass $\nabla_{\mathbf{y}^{(k-1)}}\ell$ into the layer below.
+\item The training gradient is the sum of these per-example gradients, or their average, according to whether $L$ sums or averages the divergences. A minibatch replaces the full sum by the sum over the batch.
+\end{enumerate}
+
+A shape check with numbers: $\mathbf{x}=(1,2)^{\mathsf T}$, $W=(3,\,-1)$, $b=0.5$, and $\ell=(z-1)^2$ with the identity activation. Then $z=1.5$ and $\ell=0.25$, so $g=\partial\ell/\partial z=1$. Equation \eqref{eq:affine-grad} gives $\nabla_W\ell=(1,\,2)$, $\nabla_b\ell=1$, and $\nabla_{\mathbf{x}}\ell=(3,\,-1)^{\mathsf T}$.
+
+\subsection{Gradient descent}
+
+Full-batch descent on a loss $L(W)$ with learning rate $\eta$:
+\begin{equation}
+W\leftarrow W-\eta\nabla_W L(W).
+\end{equation}
+A minibatch of $B$ examples estimates that gradient. Stochastic gradient descent uses the estimate in the same update. With momentum, a velocity $v$ accumulates gradients. One common form, with momentum coefficient $\rho$ (often $0.9$):
+\begin{equation}
+v\leftarrow \rho v+\nabla_W L,
+\qquad
+W\leftarrow W-\eta v.
+\end{equation}
+\texttt{loss.backward()} \emph{adds} into the stored gradient. The training step therefore zeros it before the backward pass. A typical loop is: zero the gradient, forward, loss, backward, step.
+
+Regularization adds a penalty so the weights stay small, for example $L\leftarrow L+\lambda\|W\|_2^2$. The learning rate is a hyperparameter. A step schedule multiplies it by a constant at fixed epochs. A linear warmup raises it from a small value at the start so a large initial rate does not explode the loss.
+
+\section{Convolutional networks}
+
+A fully connected layer on an image flattens $H\times W\times C$ numbers and connects every input to every output. A convolution reuses one small kernel at every location.
+
+One output channel, with a kernel $w$ of spatial size $K\times K$ over $C_{\mathrm{in}}$ input channels, in the PyTorch convention (no flip):
+\begin{equation}
+\begin{aligned}
+z[y,x]
+&=
+b+\sum_{c=1}^{C_{\mathrm{in}}}\sum_{i=0}^{K-1}\sum_{j=0}^{K-1}
+w[c,i,j]\;\img[c,\,y+i,\,x+j].
+\end{aligned}
+\label{eq:cnn}
+\end{equation}
+Each output number is a dot product between the kernel and a $K\times K\times C_{\mathrm{in}}$ patch, plus one bias. $C_{\mathrm{out}}$ kernels produce $C_{\mathrm{out}}$ activation maps, stacked on the channel axis. A ReLU is then applied elementwise.
+
+Spatial size. Input $W$, kernel $K$, padding $P$, stride $S$:
+\begin{equation}
+W'
+=
+\frac{W-K+2P}{S}+1.
+\label{eq:outsize}
+\end{equation}
+The same formula applies to the height. With $P=0$ and $S=1$, this is $W-K+1$. The padding that preserves size for odd $K$ and stride $1$ is $P=(K-1)/2$. A max-pool window uses \eqref{eq:outsize} with $K$ the window and $S$ the pool stride. A $2\times 2$ pool with stride $2$ halves each spatial side.
+
+Parameter count of one convolution, including biases:
+\begin{equation}
+C_{\mathrm{out}}\cdot C_{\mathrm{in}}\cdot K\cdot K+C_{\mathrm{out}}.
+\end{equation}
+A fully connected layer from $D_{\mathrm{in}}$ inputs to $D_{\mathrm{out}}$ outputs costs $D_{\mathrm{in}}D_{\mathrm{out}}+D_{\mathrm{out}}$. The convolution is smaller because of local connectivity (each output sees a $K\times K$ neighborhood) and weight sharing (the same $w$ at every position).
+
+The receptive field is the set of input pixels that can affect one output. For stride-$1$ layers of kernel size $K$, each new layer adds $K-1$ to the field. After $L$ such layers the field has side
+\begin{equation}
+1+L(K-1).
+\end{equation}
+Pooling or a stride greater than $1$ grows the field faster, which is why a network downsamples instead of stacking $3\times 3$ layers until the field covers the image.
+
+A classification ConvNet ends in \eqref{eq:softmax}: one logit per class, integer labels, and \texttt{CrossEntropyLoss}. The last layer is linear in the flattened feature maps. No sigmoid or softmax is attached to the module when that loss is used.
+
+\end{document}
