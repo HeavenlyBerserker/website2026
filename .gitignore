@@ -1,2 +1,3 @@
-# Keep instructor solutions out of the public course site.
-courses/comp322-f26/assignments/*_solutions.ipynb
+# COMP 322 assignments stay off the public site, except the PyTorch Wizard.
+courses/comp322-f26/assignments/*
+!courses/comp322-f26/assignments/COMP322_pytorch_wizard_exercises.ipynb
