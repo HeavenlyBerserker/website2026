@@ -1,0 +1,724 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=0.75in]{geometry}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{COMP 141}
+\rhead{Midterm 2 Practice Problems}
+\cfoot{\thepage}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    columns=fullflexible,
+    keepspaces=true,
+    showstringspaces=false,
+    frame=none,
+    aboveskip=4pt,
+    belowskip=4pt
+}
+
+\setlist[itemize]{leftmargin=1.3em,itemsep=2pt,topsep=2pt}
+\setlist[enumerate]{leftmargin=1.6em,itemsep=2pt,topsep=2pt}
+
+\begin{document}
+
+\begin{center}
+    {\Large \textbf{COMP 141: Midterm 2 Practice Problems}}\\[6pt]
+    Fall 2026
+\end{center}
+
+\vspace{0.15in}
+
+Solutions are at the end of this document. Try each problem before looking.
+
+\section*{Topics to Review}
+
+The practice problems cover the main topics that may appear on Midterm 2.
+You should be comfortable both \textbf{reading Python code} and
+\textbf{writing short programs yourself}.
+
+\subsection*{Loops}
+
+Review:
+
+\begin{itemize}
+    \item \texttt{while} loops and \texttt{for} loops, including \texttt{range};
+    \item nested loops;
+    \item running totals;
+    \item input validation;
+    \item a sliding window: compare each item with the one just before it;
+    \item changing the loop variable inside the loop, and tracing the result by hand.
+\end{itemize}
+
+\subsection*{Files}
+
+Review:
+
+\begin{itemize}
+    \item \texttt{open(filename, "r")} and \texttt{open(filename, "w")};
+    \item what happens when the file does or does not already exist;
+    \item reading a file one line at a time;
+    \item \texttt{split} on a line, then \texttt{int} or \texttt{float} on the pieces;
+    \item closing the file when you are done.
+\end{itemize}
+
+\subsection*{Strings}
+
+Review:
+
+\begin{itemize}
+    \item indexes, starting at 0, and \texttt{len};
+    \item slices, including omitted endpoints and negative indexes;
+    \item strings are immutable: concatenation builds a new string;
+    \item \texttt{find}, \texttt{startswith}, \texttt{endswith}, \texttt{replace}, and \texttt{lower};
+    \item \texttt{isdigit}, and walking a string one character at a time;
+    \item counting and filtering characters.
+\end{itemize}
+
+\subsection*{Lists}
+
+Review:
+
+\begin{itemize}
+    \item indexes, assignment into a list, and \texttt{len};
+    \item \texttt{append} and \texttt{insert};
+    \item repetition with \texttt{*};
+    \item loops that read or update every element.
+\end{itemize}
+
+\subsection*{Functions}
+
+Review:
+
+\begin{itemize}
+    \item parameters and arguments;
+    \item local variables;
+    \item \texttt{return} versus \texttt{print};
+    \item tracing a call does not change the caller's variables unless the caller assigns the return value.
+\end{itemize}
+
+\newpage
+
+\section*{Practice Problems}
+
+\textbf{1.} Do this on paper, not on the computer. What does this code print?
+
+\begin{lstlisting}
+x = 0
+while x < 10:
+    x += 1
+    if x % 2 == 0:
+        x += 2
+    print(x)
+\end{lstlisting}
+
+\textbf{2.} Do this on paper, not on the computer. What does this code print?
+
+\begin{lstlisting}
+for i in range(0, 3):
+    for j in range(i + 1, 6):
+        print(i, j)
+\end{lstlisting}
+
+\textbf{3.} Write a loop that prints this sequence:
+
+\begin{lstlisting}
+1, 2, 4, 7, 11, 16, 22, 29, 37, 46, ...
+\end{lstlisting}
+
+Stop when the number would be 100 or more. Do not print any number greater than or equal to 100. One number per line is fine. Figure out the pattern between the numbers. A \texttt{while} loop is a natural fit. A \texttt{for} loop can also work.
+
+\textbf{4.} Write a function called \texttt{count\_evens} that counts the even digits in a string.
+
+Example: \texttt{count\_evens("abc425a")} returns 2.
+
+\textbf{5.} Write a function called \texttt{common\_factors} that takes two arguments. It counts how many integers greater than or equal to 1 divide both arguments evenly.
+
+Example: \texttt{common\_factors(12, 18)} returns 4, because both numbers have factors 1, 2, 3, and 6.
+
+\textbf{6.} Write a function called \texttt{test\_alphabetical} that takes a string and returns whether the characters are in alphabetical order. Each character must come later in the alphabet than the one immediately before it. The function will only be tested with lowercase letters.
+
+\begin{itemize}
+    \item \texttt{test\_alphabetical("abcde")} returns \texttt{True}
+    \item \texttt{test\_alphabetical("cba")} returns \texttt{False}
+    \item \texttt{test\_alphabetical("ace")} returns \texttt{True}
+    \item \texttt{test\_alphabetical("abcdd")} returns \texttt{False}
+    \item \texttt{test\_alphabetical("ghost")} returns \texttt{True}
+    \item \texttt{test\_alphabetical("bcda")} returns \texttt{False}
+    \item \texttt{test\_alphabetical("almost")} returns \texttt{True}
+\end{itemize}
+
+\textbf{7.} Alice and Bob are running in an election. A file called \texttt{results.txt} stores the results. Each line has the hour in 24-hour form, the minute, and the name \texttt{Alice} or \texttt{Bob}. The file is sorted by time. Write a program that answers each part below. Solve them in order.
+
+\begin{enumerate}
+    \item[a.] Print who won the election, Alice or Bob.
+    \item[b.] Print every time when two people voted at the exact same time: two consecutive lines with the same hour and minute.
+    \item[c.] Print the largest gap, in minutes, between two consecutive votes.
+    \item[d.] Print how many times Alice received two or more votes in a row, and how many times Bob did. One run of several identical votes counts once.
+\end{enumerate}
+
+\textbf{8.} Write a function called \texttt{find\_biggest\_letter} that takes one string and returns the alphabetically latest letter. The string contains only lowercase letters.
+
+\begin{itemize}
+    \item \texttt{find\_biggest\_letter("apple")} returns \texttt{"p"}
+    \item \texttt{find\_biggest\_letter("correct")} returns \texttt{"t"}
+\end{itemize}
+
+\textbf{9.} Everyone using a program must be at least 18. Write a piece of code that asks for an age and keeps asking until the user types an age of at least 18.
+
+\textbf{10.} Write a function called \texttt{roman} that takes one integer and returns a simplified Roman numeral. Ignore the usual subtraction rule. Normally 9 is \texttt{IX}, which is 10 minus 1. Your function may return \texttt{VIIII} instead.
+
+The symbols are \texttt{M} = 1000, \texttt{D} = 500, \texttt{C} = 100, \texttt{L} = 50, \texttt{X} = 10, \texttt{V} = 5, and \texttt{I} = 1.
+
+Start with an empty string. Loop until the number is 0. Inside the loop, if the number is at least one of those values, concatenate that symbol and subtract the value.
+
+\begin{itemize}
+    \item \texttt{roman(8)} returns \texttt{"VIII"}
+    \item \texttt{roman(49)} returns \texttt{"XXXXVIIII"}
+    \item \texttt{roman(1999)} returns \texttt{"MDCCCCLXXXXVIIII"}
+\end{itemize}
+
+Challenge: make a version that uses the real subtraction rules, so 9 is \texttt{IX}, not \texttt{VIIII}.
+
+\textbf{11.} Write a guess-the-number program. Use \texttt{random.randint} to pick an integer from 1 through 100. Loop until the user guesses it. After each wrong guess, print whether it was too low or too high.
+
+\textbf{12.} Which function converts a numeric value to a string?
+
+\begin{enumerate}
+    \item[a.] \texttt{str}
+    \item[b.] \texttt{value}
+    \item[c.] \texttt{num}
+    \item[d.] \texttt{chr}
+\end{enumerate}
+
+\textbf{13.} Which of the following are true? More than one may be true.
+
+\begin{enumerate}
+    \item[a.] Opening a file for reading raises an error if the file does not exist.
+    \item[b.] Opening a file for writing raises an error if the file does not exist.
+    \item[c.] Opening a file for reading creates an empty file if the file does not exist.
+    \item[d.] Opening a file for writing creates a new file if the file does not exist.
+    \item[e.] Opening a file for writing overwrites the file if it already exists.
+\end{enumerate}
+
+\textbf{14.} Which method can tell you whether a substring occurs anywhere in a string?
+
+\begin{enumerate}
+    \item[a.] \texttt{endswith}
+    \item[b.] \texttt{find}
+    \item[c.] \texttt{replace}
+    \item[d.] \texttt{startswith}
+\end{enumerate}
+
+\textbf{15.} What is \texttt{nums} after this code?
+
+\begin{lstlisting}
+nums = [1, 2]
+nums = nums * 3
+\end{lstlisting}
+
+\begin{enumerate}
+    \item[a.] \texttt{[1, 2] * 3}
+    \item[b.] \texttt{[3, 6]}
+    \item[c.] \texttt{[1, 2, 1, 2, 1, 2]}
+    \item[d.] \texttt{[[1, 2], [1, 2], [1, 2]]}
+\end{enumerate}
+
+\textbf{16.} Which list method adds an item at the end of a list?
+
+\begin{enumerate}
+    \item[a.] \texttt{append}
+    \item[b.] \texttt{index}
+    \item[c.] \texttt{insert}
+    \item[d.] \texttt{add}
+\end{enumerate}
+
+\textbf{17.} What does this code print?
+
+\begin{lstlisting}
+list1 = [1, 3, 5]
+list1[0] = 2
+list1.insert(2, 4)
+print(list1)
+\end{lstlisting}
+
+\begin{enumerate}
+    \item[a.] \texttt{[2, 3, 5, 2]}
+    \item[b.] \texttt{[2, 3, 4, 5]}
+    \item[c.] \texttt{[1, 3, 5, 4]}
+    \item[d.] \texttt{[1, 3, 4, 5]}
+\end{enumerate}
+
+\textbf{18.} What does this code display?
+
+\begin{lstlisting}
+my_list = [1, 2, 3, 4, 5, 6]
+for i in range(1, 6):
+    my_list[i - 1] = my_list[i]
+
+for i in range(0, 6):
+    print(my_list[i], end=" ")
+\end{lstlisting}
+
+\begin{enumerate}
+    \item[a.] \texttt{2 3 4 5 6 1}
+    \item[b.] \texttt{6 1 2 3 4 5}
+    \item[c.] \texttt{2 3 4 5 6 6}
+    \item[d.] \texttt{1 1 2 3 4 5}
+\end{enumerate}
+
+\textbf{19.} What is \texttt{string1} after this code?
+
+\begin{lstlisting}
+string1 = "Hello"
+string1 += " world"
+\end{lstlisting}
+
+\textbf{20.} What is printed?
+
+\begin{lstlisting}
+y = 0
+for i in range(1, 10):
+    y += i
+print(y)
+\end{lstlisting}
+
+\textbf{21.} What is printed?
+
+\begin{lstlisting}
+y = 0
+for i in range(2, 10, 2):
+    y += i
+print(y)
+\end{lstlisting}
+
+\textbf{22.} Each character in a string has a value that specifies its position. What is that value called?
+
+\textbf{23.} Once a string is created, its characters cannot be changed. What is the word for that property?
+
+\textbf{24.} What is the name for a span of characters taken from inside a string, such as \texttt{s[2:5]}?
+
+\textbf{25.} Write the call that opens \texttt{scores.txt} for writing.
+
+\textbf{26.} Write the call that opens \texttt{scores.txt} for reading.
+
+\textbf{27.} A file object is named \texttt{infile}. Write the call that reads the next line.
+
+\textbf{28.} Let \texttt{s = "Programming is fun"}. Give each value.
+
+\begin{enumerate}
+    \item[a.] \texttt{s[:2]}
+    \item[b.] \texttt{s[4:6]}
+    \item[c.] \texttt{len(s)}
+    \item[d.] \texttt{s.find("ram")}
+    \item[e.] \texttt{s.startswith("m")}
+    \item[f.] \texttt{s.replace("fun", "awesome")}
+    \item[g.] \texttt{s.lower()}
+\end{enumerate}
+
+\textbf{29.} What does \texttt{nPrint("a", 4)} display?
+
+\begin{lstlisting}
+def nPrint(message, n):
+    while n > 0:
+        print(message)
+        n -= 1
+\end{lstlisting}
+
+\textbf{30.} What value of \texttt{k} is printed in \texttt{main}?
+
+\begin{lstlisting}
+def nPrint(message, n):
+    while n > 0:
+        print(message)
+        n -= 1
+
+def main():
+    k = 2
+    nPrint("A message", k)
+    print(k)
+
+main()
+\end{lstlisting}
+
+\textbf{31.} What does this program display?
+
+\begin{lstlisting}
+def f1(x):
+    y = x + 2
+    print(y)
+
+def main():
+    x = 1
+    f1(x)
+    print(x)
+
+main()
+\end{lstlisting}
+
+\textbf{32.} Write a function called \texttt{productDigits} that takes a string of letters and digits and returns the product of the digits.
+
+Example: \texttt{productDigits("a2514b")} returns 40, because \(2 \times 5 \times 1 \times 4 = 40\).
+
+\textbf{33.} Write a function called \texttt{total\_time} that takes a string \texttt{"Hours:Minutes:Seconds"}. Hours, minutes, and seconds may each have any number of digits. Return the total number of seconds.
+
+\textbf{34.} Write a function called \texttt{indexSmallest} that takes a non-empty list of integers and returns the index of the smallest value.
+
+\textbf{35.} Write a function called \texttt{isValid} that takes three integer side lengths. Return \texttt{True} when the sum of any two sides is greater than the third side, and \texttt{False} otherwise.
+
+\textbf{36.} Write a function called \texttt{sumFile} that takes a file name and returns the sum of the numbers in that file. Each line contains exactly one number.
+
+\textbf{37.} Write a function called \texttt{interleave} that takes two strings, \texttt{s1} and \texttt{s2}, of equal length. Return a new string that takes a character from \texttt{s1}, then a character from \texttt{s2}, then the next from \texttt{s1}, and so on.
+
+Example: \texttt{interleave("abc", "xyz")} returns \texttt{"axbycz"}.
+
+\newpage
+
+\section*{Solutions}
+
+\textbf{1.} Each pass adds 1 first. When the result is even, it adds 2 more before printing. The printed values are 1, 4, 5, 8, 9, 12.
+
+\textbf{2.}
+\begin{lstlisting}
+0 1
+0 2
+0 3
+0 4
+0 5
+1 2
+1 3
+1 4
+1 5
+2 3
+2 4
+2 5
+\end{lstlisting}
+
+\textbf{3.} The gaps are 1, then 2, then 3, and so on. The last value printed is 92.
+
+\begin{lstlisting}
+n = 1
+step = 1
+while n < 100:
+    print(n)
+    n += step
+    step += 1
+\end{lstlisting}
+
+\textbf{4.}
+\begin{lstlisting}
+def count_evens(s):
+    count = 0
+    for ch in s:
+        if ch.isdigit() and int(ch) % 2 == 0:
+            count += 1
+    return count
+\end{lstlisting}
+
+\textbf{5.}
+\begin{lstlisting}
+def common_factors(a, b):
+    count = 0
+    limit = a
+    if b < a:
+        limit = b
+    for i in range(1, limit + 1):
+        if a % i == 0 and b % i == 0:
+            count += 1
+    return count
+\end{lstlisting}
+
+\textbf{6.} Equal letters are not in order, because the next letter must come strictly later.
+\begin{lstlisting}
+def test_alphabetical(s):
+    for i in range(1, len(s)):
+        if s[i] <= s[i - 1]:
+            return False
+    return True
+\end{lstlisting}
+
+\textbf{7.} A tie can be printed as \texttt{Tie}. The same-time lines are printed as they are found. The gap is the difference of the two times, measured in minutes from midnight. For part d, a run is counted once, when the second vote of that run appears. Later votes in the same run do not add another count.
+
+\begin{lstlisting}
+def main():
+    infile = open("results.txt", "r")
+    alice = 0
+    bob = 0
+    prev_minutes = None
+    prev_name = None
+    max_gap = 0
+    alice_runs = 0
+    bob_runs = 0
+    in_run = False
+
+    for line in infile:
+        hour, minute, name = line.split()
+        hour = int(hour)
+        minute = int(minute)
+        minutes = hour * 60 + minute
+        if name == "Alice":
+            alice += 1
+        else:
+            bob += 1
+
+        if prev_name is not None:
+            if minutes == prev_minutes:
+                print(hour, minute)
+            gap = minutes - prev_minutes
+            if gap > max_gap:
+                max_gap = gap
+            if name == prev_name and not in_run:
+                if name == "Alice":
+                    alice_runs += 1
+                else:
+                    bob_runs += 1
+                in_run = True
+            if name != prev_name:
+                in_run = False
+
+        prev_minutes = minutes
+        prev_name = name
+
+    infile.close()
+    if alice > bob:
+        print("Alice")
+    elif bob > alice:
+        print("Bob")
+    else:
+        print("Tie")
+    print(max_gap)
+    print(alice_runs, bob_runs)
+
+main()
+\end{lstlisting}
+
+\textbf{8.}
+\begin{lstlisting}
+def find_biggest_letter(s):
+    biggest = s[0]
+    for ch in s:
+        if ch > biggest:
+            biggest = ch
+    return biggest
+\end{lstlisting}
+
+\textbf{9.}
+\begin{lstlisting}
+age = int(input("Age? "))
+while age < 18:
+    print("You must be at least 18.")
+    age = int(input("Age? "))
+\end{lstlisting}
+
+\textbf{10.}
+\begin{lstlisting}
+def roman(n):
+    result = ""
+    while n > 0:
+        if n >= 1000:
+            result += "M"
+            n -= 1000
+        elif n >= 500:
+            result += "D"
+            n -= 500
+        elif n >= 100:
+            result += "C"
+            n -= 100
+        elif n >= 50:
+            result += "L"
+            n -= 50
+        elif n >= 10:
+            result += "X"
+            n -= 10
+        elif n >= 5:
+            result += "V"
+            n -= 5
+        else:
+            result += "I"
+            n -= 1
+    return result
+\end{lstlisting}
+
+Challenge, with the subtraction pairs checked before the plain symbols:
+
+\begin{lstlisting}
+def roman_real(n):
+    result = ""
+    while n > 0:
+        if n >= 1000:
+            result += "M"
+            n -= 1000
+        elif n >= 900:
+            result += "CM"
+            n -= 900
+        elif n >= 500:
+            result += "D"
+            n -= 500
+        elif n >= 400:
+            result += "CD"
+            n -= 400
+        elif n >= 100:
+            result += "C"
+            n -= 100
+        elif n >= 90:
+            result += "XC"
+            n -= 90
+        elif n >= 50:
+            result += "L"
+            n -= 50
+        elif n >= 40:
+            result += "XL"
+            n -= 40
+        elif n >= 10:
+            result += "X"
+            n -= 10
+        elif n >= 9:
+            result += "IX"
+            n -= 9
+        elif n >= 5:
+            result += "V"
+            n -= 5
+        elif n >= 4:
+            result += "IV"
+            n -= 4
+        else:
+            result += "I"
+            n -= 1
+    return result
+\end{lstlisting}
+
+\textbf{11.}
+\begin{lstlisting}
+import random
+
+secret = random.randint(1, 100)
+guess = int(input("Guess? "))
+while guess != secret:
+    if guess < secret:
+        print("too low")
+    else:
+        print("too high")
+    guess = int(input("Guess? "))
+print("You got it.")
+\end{lstlisting}
+
+\textbf{12.} a. \texttt{str}
+
+\textbf{13.} a, d, and e.
+
+\textbf{14.} b. \texttt{find}. It returns \texttt{-1} when the substring is absent. \texttt{startswith} and \texttt{endswith} only check one end, and \texttt{replace} always returns a string.
+
+\textbf{15.} c. \texttt{[1, 2, 1, 2, 1, 2]}
+
+\textbf{16.} a. \texttt{append}
+
+\textbf{17.} b. After the assignment the list is \texttt{[2, 3, 5]}. \texttt{insert(2, 4)} puts 4 at index 2, so the list is \texttt{[2, 3, 4, 5]}.
+
+\textbf{18.} c. \texttt{2 3 4 5 6 6}. Each element is copied from the one to its right, and the last 6 is never replaced.
+
+\textbf{19.} \texttt{"Hello world"}
+
+\textbf{20.} 45, the sum of the integers from 1 through 9.
+
+\textbf{21.} 20, the sum of 2, 4, 6, and 8.
+
+\textbf{22.} An index.
+
+\textbf{23.} Immutable.
+
+\textbf{24.} A slice. It is also called a substring.
+
+\textbf{25.} \texttt{open("scores.txt", "w")}
+
+\textbf{26.} \texttt{open("scores.txt", "r")}
+
+\textbf{27.} \texttt{infile.readline()}
+
+\textbf{28.}
+\begin{enumerate}
+    \item[a.] \texttt{"Pr"}
+    \item[b.] \texttt{"ra"}
+    \item[c.] 18
+    \item[d.] 4
+    \item[e.] \texttt{False}
+    \item[f.] \texttt{"Programming is awesome"}
+    \item[g.] \texttt{"programming is fun"}
+\end{enumerate}
+
+\textbf{29.} The letter \texttt{a}, printed on four lines.
+
+\textbf{30.} \texttt{2}. The parameter \texttt{n} is local to \texttt{nPrint}, so changing it does not change \texttt{k}.
+
+\textbf{31.}
+\begin{lstlisting}
+3
+1
+\end{lstlisting}
+\texttt{f1} prints \texttt{x + 2}. The \texttt{x} in \texttt{main} is a different variable and stays 1.
+
+\textbf{32.} If the string has no digits, this version returns 1.
+\begin{lstlisting}
+def productDigits(s):
+    product = 1
+    for ch in s:
+        if ch.isdigit():
+            product *= int(ch)
+    return product
+\end{lstlisting}
+
+\textbf{33.}
+\begin{lstlisting}
+def total_time(text):
+    parts = text.split(":")
+    hours = int(parts[0])
+    minutes = int(parts[1])
+    seconds = int(parts[2])
+    return hours * 3600 + minutes * 60 + seconds
+\end{lstlisting}
+
+\textbf{34.}
+\begin{lstlisting}
+def indexSmallest(nums):
+    smallest_at = 0
+    for i in range(1, len(nums)):
+        if nums[i] < nums[smallest_at]:
+            smallest_at = i
+    return smallest_at
+\end{lstlisting}
+
+\textbf{35.}
+\begin{lstlisting}
+def isValid(a, b, c):
+    return a + b > c and a + c > b and b + c > a
+\end{lstlisting}
+
+\textbf{36.}
+\begin{lstlisting}
+def sumFile(filename):
+    infile = open(filename, "r")
+    total = 0
+    for line in infile:
+        total += float(line)
+    infile.close()
+    return total
+\end{lstlisting}
+
+\textbf{37.}
+\begin{lstlisting}
+def interleave(s1, s2):
+    result = ""
+    for i in range(len(s1)):
+        result += s1[i] + s2[i]
+    return result
+\end{lstlisting}
+
+\end{document}
