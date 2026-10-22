@@ -1,0 +1,330 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=0.85in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+
+\setlist[enumerate]{leftmargin=1.7em,itemsep=0.35em,topsep=0.3em,parsep=0.15em}
+\setlist[itemize]{leftmargin=1.3em,itemsep=0.15em,topsep=0.2em}
+
+\setlength{\headheight}{14pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{COMP 322 --- Midterm 2 Study Guide}
+\rhead{Fall 2026}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\begin{document}
+
+\begin{center}
+{\Large COMP 322: Midterm 2 Study Guide}\\[0.25em]
+Computer Vision and Image Processing \quad$\cdot$\quad Fall 2026\\[0.15em]
+Prof.\ Hong Xu
+\end{center}
+
+\noindent
+Work through the exercises below as practice for Midterm 2. Solutions are at the end of this document. Try each problem before looking.
+
+\section*{1. Topics covered}
+
+\begin{itemize}
+\item Pinhole projection $u=fx/z$, $v=fy/z$, including a camera whose axes are not the world axes.
+\item Intrinsics $K$ ($3\times 3$, five degrees of freedom) and extrinsics $[R\mid\mathbf{t}]$ ($3\times 4$, six degrees of freedom). The product $M$ has eleven degrees of freedom.
+\item What you measure to calibrate a camera, and which symbol in $\mathbf{x}=M\mathbf{X}$ is unknown.
+\item Focal length, camera distance, and sensor size: which of these move the projected dots.
+\item Regression losses versus classification losses. Absolute distance versus squared Euclidean distance.
+\item Softmax, cross-entropy, and the shapes of $W\mathbf{x}+\mathbf{b}$.
+\item Partials, the sum over paths, a numeric gradient step, and a ReLU that blocks a gradient.
+\item Correlation versus convolution, output size, parameter count, receptive field, pooling.
+\item PyTorch: NCHW versus the array matplotlib plots, \texttt{backward} and \texttt{zero\_grad}, \texttt{train} versus \texttt{eval}, \texttt{detach().cpu().numpy()}.
+\item Hyperparameters, Adam, minibatches, warmup, and the training, validation, and test split.
+\item A full training program in seven pieces: device, data, loaders, model, training, testing, visualization.
+\end{itemize}
+
+\section*{2. Practice exercises}
+
+The camera in questions 1 and 2 is not aligned with the world axes. Its center is the origin, $\mathrm{right}=(1,0,0)$, $\mathrm{up}=(0,0,1)$, $\mathrm{forward}=(0,1,0)$, and $f=2$.
+
+\begin{enumerate}
+\item A world point is $(X,Y,Z)=(4,6,2)$. Compute the camera-frame coordinates $x$, $y$, $z$ and the image point $(u,v)$.
+
+\item Three separate changes, each starting from the camera and point in question 1.
+\begin{enumerate}
+\item The depth $z$ along $\mathrm{forward}$ is halved. $f$, $x$, and $y$ stay the same. What happens to $(u,v)$, and what stays the same about a pyramid of length $f$?
+\item $f$ is doubled. What happens to $(u,v)$, and what happens to that pyramid?
+\item Only the sensor width is halved. Do the dots move? What does change?
+\end{enumerate}
+
+\item You are given one photograph and you want $M$ in $\mathbf{x}=M\mathbf{X}$.
+\begin{enumerate}
+\item What must you place in the scene, and which of $\mathbf{x}$, $M$, and $\mathbf{X}$ do you compute?
+\item All of your 3D points lie on one plane. Why is a single view then not enough to pin down an 11-degree-of-freedom camera?
+\end{enumerate}
+
+\item For $\mathbf{x}=K[R\mid\mathbf{t}]\,\mathbf{X}$: say what each symbol is and give the shape of $K$, of $[R\mid\mathbf{t}]$, and of $M=K[R\mid\mathbf{t}]$. How many degrees of freedom does $K$ have? How many does $[R\mid\mathbf{t}]$ have, and why is 7 wrong? Why does $M$ have 11 rather than 12? What is a vanishing point?
+
+\item True or false. Correct each false statement.
+\begin{enumerate}
+\item $K$ is $3\times 4$.
+\item $[R\mid\mathbf{t}]$ has 7 degrees of freedom.
+\item Doubling $f$ and halving $z$ leaves $(u,v)$ unchanged.
+\item An affine map can send parallel lines to lines that meet.
+\end{enumerate}
+
+\item Both of these are legal for a real-valued target. Name each one. Which distance is each (absolute or squared Euclidean)? Which one lets a single large miss dominate the average? Why is neither the right loss for an integer class index?
+\[
+\frac{1}{N}\sum_i|\hat y_i-y_i|,
+\qquad
+\frac{1}{N}\sum_i(\hat y_i-y_i)^2.
+\]
+
+\item Name the loss $-\big(y\log\sigma(s)+(1-y)\log(1-\sigma(s))\big)$ with $\sigma(s)=1/(1+e^{-s})$ and $y\in\{0,1\}$. Give legal shapes for the logit and the label. A classmate instead has two logits and integer labels $0$ and $1$. Which loss should they switch to, and what is wrong with leaving a sigmoid on the module?
+
+\item Name $-\log p_y$ where $p_c=e^{s_c}/\sum_j e^{s_j}$ and $y$ is a class index. For $C$ classes, what does the last linear layer emit, and what is the label tensor's dtype and shape? Why do you not apply softmax in \texttt{forward}?
+
+\item Scores are $(s_1,s_2,s_3)=(1,2,3)$, and the true class is the second one. Using
+\[
+p_c=\frac{e^{s_c}}{\sum_{j=1}^{n}e^{s_j}},
+\]
+write each probability and the cross-entropy loss in exact form. Then: if $\mathbf{x}$ has length $D$ and there are $C$ classes, what are the shapes of $W$, $\mathbf{b}$, and $\mathbf{s}$ in $\mathbf{s}=W\mathbf{x}+\mathbf{b}$? What is the loss when every class is equally likely?
+
+\item The loss depends on $x$ through two intermediates, $z_1$ and $z_2$. Write $\mathrm{d}L/\mathrm{d}x$ as a sum of paths. Which factor in that sum is a partial, and why would stepping with only $\partial L/\partial z_1$ be the wrong update?
+
+\item Let $p=wx+b$ and $L=(p-t)^2$ with $w=2$, $x=4$, $b=-1$, and $t=5$. Compute $p$, $L$, $\partial L/\partial w$, and $\partial L/\partial b$. Then take one step with $\eta=0.05$ and give the new $w$ and $b$.
+
+\item After that same linear unit, a ReLU produces $a=\max(z,0)$, and a later loss has $\partial L/\partial a=4$.
+\begin{enumerate}
+\item If $z=-0.5$, what are $\partial L/\partial z$ and $\partial L/\partial w$?
+\item If $z=+0.5$ and $x=4$, what are $\partial L/\partial z$ and $\partial L/\partial w$?
+\end{enumerate}
+
+\item One $3\times 3$ window. Compute correlation with $K$ as written, show the kernel flipped by $180^\circ$, and compute convolution.
+\[
+I=\begin{bmatrix} 1&2&0\\ 0&1&3\\ 2&0&1 \end{bmatrix},
+\qquad
+K=\begin{bmatrix} 1&0&-1\\ 1&0&-1\\ 1&0&-1 \end{bmatrix}.
+\]
+
+\item Input width $32$, kernel $3$. Give the output width, or say the settings are illegal, for: padding $1$ and stride $1$; padding $0$ and stride $1$; padding $1$ and stride $2$. What padding preserves width for an odd kernel and stride $1$?
+
+\item Count parameters, including biases: \texttt{Conv2d(1, 16, 3)}, \texttt{Conv2d(16, 32, 3)}, and \texttt{Linear(784, 16)}. Give two reasons the $1\to 16$ convolution is so much smaller than that linear layer on a $28\times 28$ image.
+
+\item A unit in the output of two stride-$1$ convolutions, each with a $3\times 3$ kernel, depends on a square in the input. What is the side of that square? Justify it by saying what each new layer adds. What is the side after a third such layer?
+
+\item \texttt{x} has shape $(8,3,16,16)$.
+\begin{verbatim}
+h = nn.MaxPool2d(2)(torch.relu(nn.Conv2d(3, 4, 3, padding=1)(x)))
+\end{verbatim}
+What is the shape of \texttt{h}? How many parameters does the pool have? The next layer produces $10$ logits and the loss is \texttt{CrossEntropyLoss}. What goes wrong if \texttt{forward} ends in \texttt{softmax}?
+
+\item Training is on the CPU. A tensor of shape $(1,3,H,W)$ is about to enter a CNN, and it requires gradients. Write the expression that turns one image into a NumPy array of shape $(H,W,3)$ that matplotlib can show. Name the layout change.
+
+\item A parameter already has \texttt{.grad} equal to $3$. The new backward contribution is $5$. What is stored if you forget \texttt{zero\_grad}? What is stored if you clear first? Why does \texttt{backward} add instead of overwrite?
+
+\item What do \texttt{model.train()} and \texttt{model.eval()} change about dropout and batch norm? Does \texttt{eval()} stop autograd? Which context manager does?
+
+\item A prediction tensor requires gradients and lives on the GPU. Give the three calls, in order, that produce a NumPy array. Which call fails if you skip \texttt{detach}, and which fails if you skip \texttt{cpu}?
+
+\item Define a hyperparameter. Give three examples from a training run. Why is a weight inside \texttt{Conv2d} not one of them?
+
+\item What two running statistics does Adam keep that plain SGD does not? What does a minibatch replace? What does momentum's velocity accumulate? What does linear warmup prevent at the start of training?
+
+\item Why are there three splits (training, validation, test) rather than two? Say what each split is allowed to influence.
+
+\item List the pieces of a Programming Assignment~4 run in the order you would write them, from choosing the device through a figure of one image. The next seven questions ask you to write those pieces. Do not look ahead at the solutions.
+
+The remaining questions are one program. Images are grayscale $28\times 28$, values $0$ to $255$, and the target is one angle in degrees. You are handed Python lists \texttt{images} and \texttt{angles}, each of length $N$.
+
+\item Write the device selection. Then say what exception you get if the model is on CUDA and a batch is still on the CPU.
+
+\item Build \texttt{X} of shape $(N,1,28,28)$ and \texttt{y} of shape $(N,1)$, dtype \texttt{float32}, pixels in $[0,1]$. Split off a validation set. Subtract the training mean and divide by the training standard deviation, and apply those same two numbers to the validation images. Why is it wrong to recompute the mean on the validation images?
+
+\item Write \texttt{make\_loader(X, y, batch\_size, shuffle)} with a seeded generator. Training uses shuffle and batch size $32$. Validation does not shuffle. Why must the epoch loss weight each batch by its length?
+
+\item Write \texttt{AngleNet}. One convolution from $1$ to $8$ channels, kernel $3$, padding $1$, then ReLU, then a $2\times 2$ max pool, then a linear layer to one number. You have to compute the linear layer's input size yourself. What is the spatial size after the pool?
+
+\item Write \texttt{train(model, loader, epochs, lr=1e-3)} for this regression problem. Use minibatches, Adam, and mean squared error. Return the sample-weighted training loss of each epoch. The body has to contain the update in the right order. A missing \texttt{zero\_grad} is wrong even if the loss goes down for one epoch.
+
+\item Write \texttt{evaluate(model, loader)} returning the mean absolute error in degrees as a Python float. Use eval mode and \texttt{inference\_mode}. Give two reasons this number is not the list returned by \texttt{train}.
+
+\item \texttt{xb} has shape $(32,1,28,28)$, may be on CUDA, and may require gradients. Write the lines that plot image $0$ in grayscale. Include the device move, the gradient cut, the NCHW-to-HWC permutation, and the squeeze that makes the array $(28,28)$ rather than $(28,28,1)$.
+\end{enumerate}
+
+\section*{3. Solutions}
+
+\begin{enumerate}
+\item $x=4\cdot 1=4$, $y=2\cdot 1=2$ because $\mathrm{up}$ is world $Z$, and $z=6$ because $\mathrm{forward}$ is world $Y$. Then $u=2\cdot 4/6=4/3$ and $v=2\cdot 2/6=2/3$.
+
+\item
+\begin{enumerate}
+\item $u=fx/z$ and $v=fy/z$ both double when $z$ is halved. The pyramid's length is $f$, which did not change.
+\item $(u,v)$ doubles again, from the factor $f$. The pyramid gets longer: its base sits one focal length in front of the pinhole, so that base moves farther from the camera.
+\item The dots stay. Sensor width is not in $u=fx/z$ or $v=fy/z$. The rectangle, and the base of the pyramid, get narrower.
+\end{enumerate}
+
+\item
+\begin{enumerate}
+\item Place an object whose 3D coordinates you know, and record the pixel of each of those points. $\mathbf{x}$ and $\mathbf{X}$ are measured. The unknown is $M$.
+\item Points on one plane determine a homography, which has $8$ degrees of freedom. A full camera has $11$. One view of a flat target does not pin down $M$.
+\end{enumerate}
+
+\item $\mathbf{x}=(u,v,1)$ is the image point. $K$ is the $3\times 3$ intrinsic matrix
+\[
+K=\begin{bmatrix} f_x & s & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix},
+\]
+with $5$ degrees of freedom. $[R\mid\mathbf{t}]$ is the $3\times 4$ extrinsic block: $3$ from the rotation and $3$ from the translation, so $6$, not $7$. $\mathbf{X}=(X,Y,Z,1)$. The product $M$ is $3\times 4$. Its $12$ entries are defined up to scale, which removes one degree of freedom and leaves $11$. A vanishing point is the image of a direction at infinity. That homogeneous point has last coordinate $0$.
+
+\item
+\begin{enumerate}
+\item False. $K$ is $3\times 3$. The $3\times 4$ matrix is $M$ or $[R\mid\mathbf{t}]$.
+\item False. Six: three rotational, three translational.
+\item True. The ratio $f/z$ is unchanged, so $u$ and $v$ are unchanged.
+\item False. Affine maps preserve parallelism. A projective map can send parallel lines to lines that meet.
+\end{enumerate}
+
+\item The first is mean absolute error, \texttt{L1Loss}: absolute distance, and Manhattan distance when there are several coordinates. The second is mean squared error, \texttt{MSELoss}: squared Euclidean distance. Squaring lets one large miss dominate. A class index is not a coordinate. Use cross-entropy for that, not either of these.
+
+\item \texttt{BCEWithLogitsLoss}. One logit, shape $(N,1)$ or $(N,)$ after a squeeze of the last dimension, and float labels $0$ or $1$ of the same shape. Two logits with integer labels $0$ and $1$ are \texttt{CrossEntropyLoss}. The sigmoid form of binary cross-entropy already applies $\sigma$. A sigmoid in the module applies it twice and can overflow.
+
+\item Multiclass cross-entropy, \texttt{CrossEntropyLoss}. The last layer emits $C$ logits, shape $(N,C)$. Labels are \texttt{int64} of shape $(N,)$. The loss applies the log-softmax itself. A softmax in \texttt{forward} feeds it probabilities and the loss normalizes again.
+
+\item $n=3$ and the sum is $e+e^{2}+e^{3}$. The probabilities are
+\[
+p_1=\frac{e}{e+e^{2}+e^{3}},\quad
+p_2=\frac{e^{2}}{e+e^{2}+e^{3}},\quad
+p_3=\frac{e^{3}}{e+e^{2}+e^{3}}.
+\]
+The loss is $-\log p_2=\log(e+e^{2}+e^{3})-2$. $W$ is $C\times D$, $\mathbf{b}$ and $\mathbf{s}$ are $C\times 1$. Equal probabilities give loss $\log C$.
+
+\item $\mathrm{d}L/\mathrm{d}x=(\partial L/\partial z_1)(\partial z_1/\partial x)+(\partial L/\partial z_2)(\partial z_2/\partial x)$. Each factor $\partial L/\partial z_i$ holds the other inputs of that gate fixed. The update needs the total derivative, the sum of the paths. Using only the first path drops every effect that goes through $z_2$.
+
+\item $p=2\cdot 4+(-1)=7$ and $L=(7-5)^{2}=4$. Then $\partial L/\partial p=4$, so $\partial L/\partial w=4\cdot 4=16$ and $\partial L/\partial b=4$. The step is $w\leftarrow 2-0.05\cdot 16=1.2$ and $b\leftarrow -1-0.05\cdot 4=-1.2$.
+
+\item
+\begin{enumerate}
+\item The ReLU derivative is $0$ for $z<0$, so $\partial L/\partial z=0$ and $\partial L/\partial w=0$.
+\item The ReLU derivative is $1$, so $\partial L/\partial z=4$ and $\partial L/\partial w=4\cdot 4=16$.
+\end{enumerate}
+
+\item Correlation, kernel as written: left column minus right column, $(1+0+2)-(0+3+1)=-1$. The $180^\circ$ flip is $-K$,
+\[
+\begin{bmatrix}-1&0&1\\ -1&0&1\\ -1&0&1\end{bmatrix}.
+\]
+Convolution is the correlation of $I$ with that flip, which equals $+1$.
+
+\item Padding $1$, stride $1$: $(32-3+2)/1+1=32$, size preserved. Padding $0$, stride $1$: $30$. Padding $1$, stride $2$: $(32-3+2)/2+1=16.5$, not an integer, so those settings are illegal. Preserving padding for odd $K$ and stride $1$ is $P=(K-1)/2$, here $1$.
+
+\item $16\cdot(1\cdot 3\cdot 3+1)=160$. $32\cdot(16\cdot 9+1)=4640$. $784\cdot 16+16=12560$. The convolution is local, a $3\times 3$ neighborhood rather than all $784$ pixels, and the same kernel is reused at every position.
+
+\item Each stride-$1$ layer of kernel $3$ adds $3-1=2$ to the field. Two layers: side $1+2\cdot 2=5$. Three layers: side $7$.
+
+\item Convolution with padding $1$ keeps $16\times 16$ and makes $4$ channels. ReLU keeps that. The pool halves each side. Shape $(8,4,8,8)$. The pool has no parameters. \texttt{CrossEntropyLoss} applies log-softmax to logits. A softmax in \texttt{forward} makes it normalize twice, and the loss is no longer $-\log p_y$ of the class scores.
+
+\item \texttt{tensor[0].detach().permute(1, 2, 0).numpy()}. Index $0$ drops the batch axis, leaving CHW. \texttt{permute(1, 2, 0)} is HWC. \texttt{detach} lets NumPy see the values. On the CPU, \texttt{.cpu()} is optional.
+
+\item \texttt{backward} adds. Forgetting \texttt{zero\_grad} stores $3+5=8$. Clearing first stores $5$. Addition is what lets several backward passes accumulate. A normal step wants only the new batch, so the old value has to be cleared.
+
+\item \texttt{train} uses dropout and computes batch-norm statistics from the batch. \texttt{eval} turns dropout off and uses the stored batch-norm statistics. \texttt{eval} does not stop autograd. \texttt{torch.inference\_mode()} or \texttt{torch.no\_grad()} does.
+
+\item \texttt{detach().cpu().numpy()}. Skipping \texttt{detach} makes \texttt{numpy()} refuse a tensor that requires grad. Skipping \texttt{cpu} makes \texttt{numpy()} refuse a CUDA tensor.
+
+\item A hyperparameter is chosen before the run and is not updated by the optimizer. Examples: learning rate, batch size, number of epochs. A convolution weight is a parameter. \texttt{step} changes it.
+
+\item Adam keeps a running average of the gradient and a running average of the squared gradient, and each parameter gets its own effective step size. A minibatch estimates the gradient over the whole training set. Momentum's velocity accumulates past gradients. Warmup keeps the first steps small so a large learning rate does not explode the loss.
+
+\item The training split is what the optimizer fits. The validation split is where you choose hyperparameters, so those choices are not tuned on the test set. The test split is used once, for a number about new data. Two splits force you to tune on the same data you report.
+
+\item Device, then data, then loaders, then the model, then the training loop, then evaluation, then a figure of one image.
+
+\item
+\begin{verbatim}
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+\end{verbatim}
+A CUDA model and a CPU batch raise a device-mismatch error inside the forward pass.
+
+\item
+\begin{verbatim}
+X = torch.tensor(np.stack(images), dtype=torch.float32)
+X = X.unsqueeze(1) / 255.0          # (N, 1, 28, 28)
+y = torch.tensor(angles, dtype=torch.float32).view(-1, 1)
+n = int(0.8 * len(X))
+X_train, X_val = X[:n], X[n:]
+y_train, y_val = y[:n], y[n:]
+mu = X_train.mean()
+sd = X_train.std().clamp_min(1e-6)
+X_train = (X_train - mu) / sd
+X_val = (X_val - mu) / sd
+\end{verbatim}
+A mean computed on the validation images uses data the model is not supposed to see while you are still making choices.
+
+\item
+\begin{verbatim}
+def make_loader(X, y, batch_size, shuffle, seed=0):
+    g = torch.Generator().manual_seed(seed)
+    ds = TensorDataset(X, y)
+    return DataLoader(ds, batch_size=batch_size, shuffle=shuffle, generator=g)
+\end{verbatim}
+\texttt{MSELoss} averages inside the batch. A short last batch would count too much in a plain mean of batch losses, so weight each batch by \texttt{xb.shape[0]}.
+
+\item After the convolution the map is still $28\times 28$. The pool makes it $14\times 14$. The linear layer sees $8\cdot 14\cdot 14=1568$ inputs.
+\begin{verbatim}
+class AngleNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = nn.Conv2d(1, 8, kernel_size=3, padding=1)
+        self.pool = nn.MaxPool2d(2)
+        self.fc = nn.Linear(8 * 14 * 14, 1)
+
+    def forward(self, x):
+        x = self.pool(torch.relu(self.conv(x)))
+        x = torch.flatten(x, 1)
+        return self.fc(x)
+\end{verbatim}
+
+\item
+\begin{verbatim}
+def train(model, loader, epochs, lr=1e-3):
+    model.to(device)
+    loss_fn = nn.MSELoss()
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    history = []
+    for _ in range(epochs):
+        model.train()
+        running = 0.0
+        for xb, yb in loader:
+            xb, yb = xb.to(device), yb.to(device)
+            opt.zero_grad()
+            loss = loss_fn(model(xb), yb)
+            loss.backward()
+            opt.step()
+            running += loss.item() * xb.shape[0]
+        history.append(running / len(loader.dataset))
+    return history
+\end{verbatim}
+
+\item
+\begin{verbatim}
+def evaluate(model, loader):
+    model.eval()
+    total, count = 0.0, 0
+    with torch.inference_mode():
+        for xb, yb in loader:
+            xb, yb = xb.to(device), yb.to(device)
+            err = (model(xb) - yb).abs().sum().item()
+            total += err
+            count += yb.shape[0]
+    return total / count
+\end{verbatim}
+Training reported mean squared error on the training loader. This is mean absolute error on a different loader, with dropout off and no weight update.
+
+\item
+\begin{verbatim}
+img = xb[0].detach().cpu().permute(1, 2, 0).squeeze(-1).numpy()
+plt.imshow(img, cmap="gray")
+\end{verbatim}
+\texttt{xb[0]} is CHW. \texttt{permute(1, 2, 0)} is HWC. \texttt{squeeze(-1)} drops the grayscale channel so the array is $(28,28)$.
+\end{enumerate}
+
+\end{document}
