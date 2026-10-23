@@ -84,17 +84,6 @@ Review:
     \item counting and filtering characters.
 \end{itemize}
 
-\subsection*{Lists}
-
-Review:
-
-\begin{itemize}
-    \item indexes, assignment into a list, and \texttt{len};
-    \item \texttt{append} and \texttt{insert};
-    \item repetition with \texttt{*};
-    \item loops that read or update every element.
-\end{itemize}
-
 \subsection*{Functions}
 
 Review:
@@ -219,71 +208,14 @@ Challenge: make a version that uses the real subtraction rules, so 9 is \texttt{
     \item[d.] \texttt{startswith}
 \end{enumerate}
 
-\textbf{15.} What is \texttt{nums} after this code?
-
-\begin{lstlisting}
-nums = [1, 2]
-nums = nums * 3
-\end{lstlisting}
-
-\begin{enumerate}
-    \item[a.] \texttt{[1, 2] * 3}
-    \item[b.] \texttt{[3, 6]}
-    \item[c.] \texttt{[1, 2, 1, 2, 1, 2]}
-    \item[d.] \texttt{[[1, 2], [1, 2], [1, 2]]}
-\end{enumerate}
-
-\textbf{16.} Which list method adds an item at the end of a list?
-
-\begin{enumerate}
-    \item[a.] \texttt{append}
-    \item[b.] \texttt{index}
-    \item[c.] \texttt{insert}
-    \item[d.] \texttt{add}
-\end{enumerate}
-
-\textbf{17.} What does this code print?
-
-\begin{lstlisting}
-list1 = [1, 3, 5]
-list1[0] = 2
-list1.insert(2, 4)
-print(list1)
-\end{lstlisting}
-
-\begin{enumerate}
-    \item[a.] \texttt{[2, 3, 5, 2]}
-    \item[b.] \texttt{[2, 3, 4, 5]}
-    \item[c.] \texttt{[1, 3, 5, 4]}
-    \item[d.] \texttt{[1, 3, 4, 5]}
-\end{enumerate}
-
-\textbf{18.} What does this code display?
-
-\begin{lstlisting}
-my_list = [1, 2, 3, 4, 5, 6]
-for i in range(1, 6):
-    my_list[i - 1] = my_list[i]
-
-for i in range(0, 6):
-    print(my_list[i], end=" ")
-\end{lstlisting}
-
-\begin{enumerate}
-    \item[a.] \texttt{2 3 4 5 6 1}
-    \item[b.] \texttt{6 1 2 3 4 5}
-    \item[c.] \texttt{2 3 4 5 6 6}
-    \item[d.] \texttt{1 1 2 3 4 5}
-\end{enumerate}
-
-\textbf{19.} What is \texttt{string1} after this code?
+\textbf{15.} What is \texttt{string1} after this code?
 
 \begin{lstlisting}
 string1 = "Hello"
 string1 += " world"
 \end{lstlisting}
 
-\textbf{20.} What is printed?
+\textbf{16.} What is printed?
 
 \begin{lstlisting}
 y = 0
@@ -292,7 +224,7 @@ for i in range(1, 10):
 print(y)
 \end{lstlisting}
 
-\textbf{21.} What is printed?
+\textbf{17.} What is printed?
 
 \begin{lstlisting}
 y = 0
@@ -301,19 +233,19 @@ for i in range(2, 10, 2):
 print(y)
 \end{lstlisting}
 
-\textbf{22.} Each character in a string has a value that specifies its position. What is that value called?
+\textbf{18.} Each character in a string has a value that specifies its position. What is that value called?
 
-\textbf{23.} Once a string is created, its characters cannot be changed. What is the word for that property?
+\textbf{19.} Once a string is created, its characters cannot be changed. What is the word for that property?
 
-\textbf{24.} What is the name for a span of characters taken from inside a string, such as \texttt{s[2:5]}?
+\textbf{20.} What is the name for a span of characters taken from inside a string, such as \texttt{s[2:5]}?
 
-\textbf{25.} Write the call that opens \texttt{scores.txt} for writing.
+\textbf{21.} Write the call that opens \texttt{scores.txt} for writing.
 
-\textbf{26.} Write the call that opens \texttt{scores.txt} for reading.
+\textbf{22.} Write the call that opens \texttt{scores.txt} for reading.
 
-\textbf{27.} A file object is named \texttt{infile}. Write the call that reads the next line.
+\textbf{23.} A file object is named \texttt{infile}. Write the call that reads the next line.
 
-\textbf{28.} Let \texttt{s = "Programming is fun"}. Give each value.
+\textbf{24.} Let \texttt{s = "Programming is fun"}. Give each value.
 
 \begin{enumerate}
     \item[a.] \texttt{s[:2]}
@@ -325,7 +257,7 @@ print(y)
     \item[g.] \texttt{s.lower()}
 \end{enumerate}
 
-\textbf{29.} What does \texttt{nPrint("a", 4)} display?
+\textbf{25.} What does \texttt{nPrint("a", 4)} display?
 
 \begin{lstlisting}
 def nPrint(message, n):
@@ -334,7 +266,7 @@ def nPrint(message, n):
         n -= 1
 \end{lstlisting}
 
-\textbf{30.} What value of \texttt{k} is printed in \texttt{main}?
+\textbf{26.} What value of \texttt{k} is printed in \texttt{main}?
 
 \begin{lstlisting}
 def nPrint(message, n):
@@ -350,7 +282,7 @@ def main():
 main()
 \end{lstlisting}
 
-\textbf{31.} What does this program display?
+\textbf{27.} What does this program display?
 
 \begin{lstlisting}
 def f1(x):
@@ -365,19 +297,17 @@ def main():
 main()
 \end{lstlisting}
 
-\textbf{32.} Write a function called \texttt{productDigits} that takes a string of letters and digits and returns the product of the digits.
+\textbf{28.} Write a function called \texttt{productDigits} that takes a string of letters and digits and returns the product of the digits.
 
 Example: \texttt{productDigits("a2514b")} returns 40, because \(2 \times 5 \times 1 \times 4 = 40\).
 
-\textbf{33.} Write a function called \texttt{total\_time} that takes a string \texttt{"Hours:Minutes:Seconds"}. Hours, minutes, and seconds may each have any number of digits. Return the total number of seconds.
+\textbf{29.} Write a function called \texttt{total\_time} that takes a string \texttt{"Hours:Minutes:Seconds"}. Hours, minutes, and seconds may each have any number of digits. Return the total number of seconds.
 
-\textbf{34.} Write a function called \texttt{indexSmallest} that takes a non-empty list of integers and returns the index of the smallest value.
+\textbf{30.} Write a function called \texttt{isValid} that takes three integer side lengths. Return \texttt{True} when the sum of any two sides is greater than the third side, and \texttt{False} otherwise.
 
-\textbf{35.} Write a function called \texttt{isValid} that takes three integer side lengths. Return \texttt{True} when the sum of any two sides is greater than the third side, and \texttt{False} otherwise.
+\textbf{31.} Write a function called \texttt{sumFile} that takes a file name and returns the sum of the numbers in that file. Each line contains exactly one number.
 
-\textbf{36.} Write a function called \texttt{sumFile} that takes a file name and returns the sum of the numbers in that file. Each line contains exactly one number.
-
-\textbf{37.} Write a function called \texttt{interleave} that takes two strings, \texttt{s1} and \texttt{s2}, of equal length. Return a new string that takes a character from \texttt{s1}, then a character from \texttt{s2}, then the next from \texttt{s1}, and so on.
+\textbf{32.} Write a function called \texttt{interleave} that takes two strings, \texttt{s1} and \texttt{s2}, of equal length. Return a new string that takes a character from \texttt{s1}, then a character from \texttt{s2}, then the next from \texttt{s1}, and so on.
 
 Example: \texttt{interleave("abc", "xyz")} returns \texttt{"axbycz"}.
 
@@ -617,33 +547,25 @@ print("You got it.")
 
 \textbf{14.} b. \texttt{find}. It returns \texttt{-1} when the substring is absent. \texttt{startswith} and \texttt{endswith} only check one end, and \texttt{replace} always returns a string.
 
-\textbf{15.} c. \texttt{[1, 2, 1, 2, 1, 2]}
+\textbf{15.} \texttt{"Hello world"}
 
-\textbf{16.} a. \texttt{append}
+\textbf{16.} 45, the sum of the integers from 1 through 9.
 
-\textbf{17.} b. After the assignment the list is \texttt{[2, 3, 5]}. \texttt{insert(2, 4)} puts 4 at index 2, so the list is \texttt{[2, 3, 4, 5]}.
+\textbf{17.} 20, the sum of 2, 4, 6, and 8.
 
-\textbf{18.} c. \texttt{2 3 4 5 6 6}. Each element is copied from the one to its right, and the last 6 is never replaced.
+\textbf{18.} An index.
 
-\textbf{19.} \texttt{"Hello world"}
+\textbf{19.} Immutable.
 
-\textbf{20.} 45, the sum of the integers from 1 through 9.
+\textbf{20.} A slice. It is also called a substring.
 
-\textbf{21.} 20, the sum of 2, 4, 6, and 8.
+\textbf{21.} \texttt{open("scores.txt", "w")}
 
-\textbf{22.} An index.
+\textbf{22.} \texttt{open("scores.txt", "r")}
 
-\textbf{23.} Immutable.
+\textbf{23.} \texttt{infile.readline()}
 
-\textbf{24.} A slice. It is also called a substring.
-
-\textbf{25.} \texttt{open("scores.txt", "w")}
-
-\textbf{26.} \texttt{open("scores.txt", "r")}
-
-\textbf{27.} \texttt{infile.readline()}
-
-\textbf{28.}
+\textbf{24.}
 \begin{enumerate}
     \item[a.] \texttt{"Pr"}
     \item[b.] \texttt{"ra"}
@@ -654,18 +576,18 @@ print("You got it.")
     \item[g.] \texttt{"programming is fun"}
 \end{enumerate}
 
-\textbf{29.} The letter \texttt{a}, printed on four lines.
+\textbf{25.} The letter \texttt{a}, printed on four lines.
 
-\textbf{30.} \texttt{2}. The parameter \texttt{n} is local to \texttt{nPrint}, so changing it does not change \texttt{k}.
+\textbf{26.} \texttt{2}. The parameter \texttt{n} is local to \texttt{nPrint}, so changing it does not change \texttt{k}.
 
-\textbf{31.}
+\textbf{27.}
 \begin{lstlisting}
 3
 1
 \end{lstlisting}
 \texttt{f1} prints \texttt{x + 2}. The \texttt{x} in \texttt{main} is a different variable and stays 1.
 
-\textbf{32.} If the string has no digits, this version returns 1.
+\textbf{28.} If the string has no digits, this version returns 1.
 \begin{lstlisting}
 def productDigits(s):
     product = 1
@@ -675,7 +597,7 @@ def productDigits(s):
     return product
 \end{lstlisting}
 
-\textbf{33.}
+\textbf{29.}
 \begin{lstlisting}
 def total_time(text):
     parts = text.split(":")
@@ -685,23 +607,13 @@ def total_time(text):
     return hours * 3600 + minutes * 60 + seconds
 \end{lstlisting}
 
-\textbf{34.}
-\begin{lstlisting}
-def indexSmallest(nums):
-    smallest_at = 0
-    for i in range(1, len(nums)):
-        if nums[i] < nums[smallest_at]:
-            smallest_at = i
-    return smallest_at
-\end{lstlisting}
-
-\textbf{35.}
+\textbf{30.}
 \begin{lstlisting}
 def isValid(a, b, c):
     return a + b > c and a + c > b and b + c > a
 \end{lstlisting}
 
-\textbf{36.}
+\textbf{31.}
 \begin{lstlisting}
 def sumFile(filename):
     infile = open(filename, "r")
@@ -712,7 +624,7 @@ def sumFile(filename):
     return total
 \end{lstlisting}
 
-\textbf{37.}
+\textbf{32.}
 \begin{lstlisting}
 def interleave(s1, s2):
     result = ""
